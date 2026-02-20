@@ -305,13 +305,76 @@ width:0%;
 background:linear-gradient(90deg,#4f9cff,#7ab8ff);
 transition:width .6s cubic-bezier(.22,1,.36,1);
 }
+
+.hero{
+padding:120px 20px 40px;
+text-align:left;
+}
+
+.greeting{
+font-size:14px;
+opacity:.6;
+margin-bottom:8px;
+}
+
+.headline{
+font-size:34px;
+font-weight:700;
+line-height:1.2;
+background:linear-gradient(90deg,#fff,#9ecbff);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.badge{
+position:absolute;
+background:#1db954;
+color:white;
+font-size:10px;
+padding:4px 8px;
+border-radius:20px;
+top:12px;
+left:12px;
+}
+
+.badge.promo{
+background:#ff453a;
+}
+.card{position:relative;}
+
+.loyalty{
+margin:20px;
+}
+
+.loyalty-text{
+font-size:13px;
+margin-bottom:6px;
+opacity:.7;
+}
+
+.loyalty-bar{
+height:8px;
+background:rgba(255,255,255,0.1);
+border-radius:20px;
+overflow:hidden;
+}
+
+.loyalty-fill{
+height:100%;
+width:40%;
+background:linear-gradient(90deg,#1db954,#1ed760);
+transition:width .6s ease;
+}
 </style>
 </head>
 <body>
 
 <div class="dynamic-island" id="island">☕ Dhito Cafe</div>
 
-<div class="header">Menu Favorit</div>
+<div class="hero">
+  <div class="greeting" id="greeting"></div>
+  <div class="headline">Siap ngopi hari ini?</div>
+</div>
 
 <div class="categories">
 <button class="active" onclick="filterMenu('all',this)">Semua</button>
@@ -322,7 +385,12 @@ transition:width .6s cubic-bezier(.22,1,.36,1);
 </div>
 
 <div class="menu-grid" id="menu"></div>
-
+<div class="loyalty">
+  <div class="loyalty-text">Level Silver 🥈</div>
+  <div class="loyalty-bar">
+    <div class="loyalty-fill" id="loyaltyFill"></div>
+  </div>
+</div>
 <div class="floating-cart" onclick="openSheet()">
 🛒
 <div class="cart-count" id="cartCount">0</div>
@@ -370,8 +438,14 @@ function render(){
 menuEl.innerHTML="";
 data.filter(d=>filter==="all"||d.kategori===filter)
 .forEach(d=>{
+
+let badge = d.kategori==="promo"
+? `<div class="badge promo">PROMO</div>`
+: `<div class="badge">BEST SELLER</div>`;
+
 menuEl.innerHTML+=`
 <div class="card">
+${badge}
 <img src="${d.img}">
 <h4>${d.nama}</h4>
 <div class="price">Rp ${d.harga.toLocaleString()}</div>
@@ -387,11 +461,23 @@ btn.classList.add("active");
 render();
 }
 
-function checkoutProgress(){
+function setGreeting(){
+let hour=new Date().getHours();
+let greet="Selamat Datang";
 
+if(hour<11) greet="Selamat Pagi ☀️";
+else if(hour<15) greet="Selamat Siang 🌤";
+else if(hour<18) greet="Selamat Sore 🌇";
+else greet="Selamat Malam 🌙";
+
+document.getElementById("greeting").innerText=greet+", Dhito";
+}
+
+setGreeting();
+
+function checkoutProgress(){
 island.classList.remove("success","danger","warning","info");
 island.classList.add("expand","info");
-
 island.innerHTML=`
 🧾 Memproses Pesanan...
 <div class="island-progress">
@@ -526,8 +612,32 @@ island.style.transform="translateX(-50%) scale(1)";
 },2500);
 }
 
-function checkout(){
+let points=parseInt(localStorage.getItem("dhito_points")||0);
 
+function updateLoyalty(){
+let percent=(points%100);
+document.getElementById("loyaltyFill").style.width=percent+"%";
+}
+
+function confettiEffect(){
+for(let i=0;i<40;i++){
+let conf=document.createElement("div");
+conf.style.position="fixed";
+conf.style.width="6px";
+conf.style.height="6px";
+conf.style.background="white";
+conf.style.top="50%";
+conf.style.left="50%";
+conf.style.opacity="0.8";
+conf.style.borderRadius="50%";
+conf.style.zIndex="9999";
+conf.style.transform=`translate(${Math.random()*300-150}px,${Math.random()*300-150}px)`;
+document.body.appendChild(conf);
+setTimeout(()=>conf.remove(),800);
+}
+}
+
+function checkout(){
 let inputs=document.querySelectorAll(".input");
 for(let i of inputs){
 if(!i.value){
@@ -536,14 +646,22 @@ return;
 }
 }
 
+points+=20;
+localStorage.setItem("dhito_points",points);
+updateLoyalty();
+
 closeSheet();
 checkoutProgress();
+confettiEffect();
 
 cart=[];
 saveCart();
 updateCart();
 }
 
+
+
+updateLoyalty();
 updateCart();
 render();
 </script>
