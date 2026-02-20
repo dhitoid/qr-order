@@ -352,14 +352,17 @@ render();
 
 function add(n){
 let item=cart.find(i=>i.nama===n);
-if(item){item.qty++}
+if(item){
+item.qty++;
+notify(`${n} ditambah (${item.qty}x)`);
+}
 else{
 let d=data.find(x=>x.nama===n);
 cart.push({...d,qty:1});
+notify(`${n} ditambahkan 🛒`);
 }
 saveCart();
 updateCart();
-notify("Ditambahkan ke keranjang");
 }
 
 function updateCart(){
@@ -386,13 +389,22 @@ setTimeout(()=>cartCount.classList.remove("bounce"),300);
 
 function increase(i){
 cart[i].qty++;
+notify(`${cart[i].nama} (${cart[i].qty}x)`);
 saveCart();
 updateCart();
 }
 
 function decrease(i){
+let name = cart[i].nama;
 cart[i].qty--;
-if(cart[i].qty<=0){cart.splice(i,1);}
+
+if(cart[i].qty<=0){
+cart.splice(i,1);
+notify(`${name} dihapus ❌`);
+}else{
+notify(`${name} (${cart[i].qty}x)`);
+}
+
 saveCart();
 updateCart();
 }
@@ -420,21 +432,23 @@ closeSheet();
 });
 
 function notify(text){
+
 island.classList.add("expand");
+
 island.style.opacity="0";
 island.style.transform="translateX(-50%) scale(.8)";
 
 setTimeout(()=>{
-island.innerHTML=text+" <span class='island-badge'>LIVE</span>";
+island.innerHTML=`✨ ${text}`;
 island.style.opacity="1";
 island.style.transform="translateX(-50%) scale(1.05)";
-},150);
+},120);
 
 setTimeout(()=>{
 island.classList.remove("expand");
 island.innerHTML="☕ Dhito Cafe";
 island.style.transform="translateX(-50%) scale(1)";
-},2600);
+},2400);
 }
 
 function checkout(){
