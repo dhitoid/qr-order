@@ -224,6 +224,37 @@ margin-bottom:10px;
 background:rgba(255,255,255,0.08);
 color:white;
 }
+
+/* REMOVE CLOSE BUTTON */
+.close{display:none}
+
+/* QTY CONTROL */
+.qty-control{
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+.qty-control button{
+background:rgba(255,255,255,0.1);
+border:none;
+color:white;
+width:26px;
+height:26px;
+border-radius:8px;
+cursor:pointer;
+}
+
+/* CART BOUNCE */
+.bounce{
+animation:bounce .4s ease;
+}
+
+@keyframes bounce{
+0%{transform:scale(1)}
+50%{transform:scale(1.2)}
+100%{transform:scale(1)}
+}
 </style>
 </head>
 <body>
@@ -249,7 +280,6 @@ color:white;
 
 <div class="sheet" id="sheet">
 <div class="handle"></div>
-<div class="close" onclick="closeSheet()">✕</div>
 
 <h3>Detail Pesanan</h3>
 <div id="cartItems"></div>
@@ -276,7 +306,7 @@ const menuEl=document.getElementById("menu");
 const sheet=document.getElementById("sheet");
 const cartCount=document.getElementById("cartCount");
 
-let cart=[];
+let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
 let filter="all";
 
 const data=[
@@ -314,6 +344,7 @@ else{
 let d=data.find(x=>x.nama===n);
 cart.push({...d,qty:1});
 }
+saveCart();
 updateCart();
 notify("Ditambahkan ke keranjang");
 }
@@ -324,22 +355,56 @@ document.getElementById("cartItems").innerHTML=
 cart.map((i,idx)=>{
 total+=i.harga*i.qty;
 return `<div class="cart-item">
-<span>${i.nama} x${i.qty}</span>
-<button onclick="remove(${idx})">-</button>
+<span>${i.nama}</span>
+<div class="qty-control">
+<button onclick="decrease(${idx})">−</button>
+<span>${i.qty}</span>
+<button onclick="increase(${idx})">+</button>
+</div>
 </div>`;
 }).join("");
 
 document.getElementById("total").innerText="Total: Rp "+total.toLocaleString();
 cartCount.innerText=cart.reduce((a,b)=>a+b.qty,0);
+
+cartCount.classList.add("bounce");
+setTimeout(()=>cartCount.classList.remove("bounce"),300);
 }
 
-function remove(i){
-cart.splice(i,1);
+function increase(i){
+cart[i].qty++;
+saveCart();
 updateCart();
+}
+
+function decrease(i){
+cart[i].qty--;
+if(cart[i].qty<=0){cart.splice(i,1);}
+saveCart();
+updateCart();
+}
+
+function saveCart(){
+localStorage.setItem("dhito_cart",JSON.stringify(cart));
 }
 
 function openSheet(){sheet.classList.add("show")}
 function closeSheet(){sheet.classList.remove("show")}
+
+/* CLOSE VIA HANDLE TAP */
+document.querySelector(".handle").addEventListener("click",closeSheet);
+
+/* SWIPE DOWN TO CLOSE */
+let startY=0;
+sheet.addEventListener("touchstart",e=>{
+startY=e.touches[0].clientY;
+});
+sheet.addEventListener("touchmove",e=>{
+let currentY=e.touches[0].clientY;
+if(currentY-startY>120){
+closeSheet();
+}
+});
 
 function notify(text){
 island.classList.add("expand");
@@ -351,12 +416,22 @@ island.innerHTML="☕ Dhito Cafe";
 }
 
 function checkout(){
+let inputs=document.querySelectorAll(".input");
+for(let i of inputs){
+if(!i.value){
+notify("Lengkapi data dulu ⚠️");
+return;
+}
+}
+
 cart=[];
+saveCart();
 updateCart();
 closeSheet();
 notify("Pesanan Berhasil 🎉");
 }
 
+updateCart();
 render();
 </script>
 </body>
