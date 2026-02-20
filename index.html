@@ -393,6 +393,86 @@ background:linear-gradient(145deg,#1c2738,#0f1725);
 border:1px solid rgba(255,255,255,0.15);
 box-shadow:0 0 40px rgba(79,156,255,0.35);
 }
+
+/* === MENU MODAL PREMIUM === */
+.menu-modal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.6);
+backdrop-filter:blur(20px);
+display:flex;
+align-items:flex-end;
+justify-content:center;
+opacity:0;
+pointer-events:none;
+transition:.4s ease;
+z-index:2000;
+}
+
+.menu-modal.show{
+opacity:1;
+pointer-events:auto;
+}
+
+.menu-modal-content{
+width:100%;
+max-width:480px;
+background:#0f1725;
+border-top-left-radius:40px;
+border-top-right-radius:40px;
+overflow:hidden;
+transform:translateY(100%);
+transition:.6s cubic-bezier(.22,1,.36,1);
+}
+
+.menu-modal.show .menu-modal-content{
+transform:translateY(0);
+}
+
+.menu-modal-img{
+height:260px;
+background-size:cover;
+background-position:center;
+}
+
+.menu-modal-body{
+padding:24px;
+}
+
+.menu-modal-body h2{
+font-size:22px;
+margin-bottom:10px;
+}
+
+.menu-modal-body p{
+opacity:.7;
+font-size:14px;
+margin-bottom:16px;
+line-height:1.5;
+}
+
+.modal-price{
+font-weight:600;
+color:#9ecbff;
+margin-bottom:18px;
+}
+
+.modal-add{
+width:100%;
+padding:16px;
+border:none;
+border-radius:24px;
+background:linear-gradient(135deg,#4f9cff,#7ab8ff);
+color:white;
+font-weight:600;
+font-size:15px;
+cursor:pointer;
+transition:.3s;
+}
+
+.modal-add:hover{
+transform:scale(1.04);
+}
 </style>
 </head>
 <body>
@@ -446,20 +526,60 @@ box-shadow:0 0 40px rgba(79,156,255,0.35);
 <button class="checkout-btn" onclick="checkout()">Bayar Sekarang</button>
 </div>
 
+<div class="menu-modal" id="menuModal">
+  <div class="menu-modal-content">
+    <div class="menu-modal-img" id="modalImg"></div>
+    <div class="menu-modal-body">
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+      <div class="modal-price" id="modalPrice"></div>
+      <button class="modal-add" id="modalAddBtn">Tambah ke Keranjang</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const island=document.getElementById("island");
 const menuEl=document.getElementById("menu");
 const sheet=document.getElementById("sheet");
 const cartCount=document.getElementById("cartCount");
+const modal=document.getElementById("menuModal");
+const modalImg=document.getElementById("modalImg");
+const modalTitle=document.getElementById("modalTitle");
+const modalDesc=document.getElementById("modalDesc");
+const modalPrice=document.getElementById("modalPrice");
+const modalAddBtn=document.getElementById("modalAddBtn");
+
+function openMenuDetail(n){
+let item=data.find(d=>d.nama===n);
+
+modalImg.style.backgroundImage=`url('${item.img}')`;
+modalTitle.innerText=item.nama;
+modalDesc.innerText=item.desc;
+modalPrice.innerText="Rp "+item.harga.toLocaleString();
+
+modalAddBtn.onclick=()=>add(item.nama);
+
+modal.classList.add("show");
+}
+
+modal.addEventListener("click",(e)=>{
+if(e.target===modal){
+modal.classList.remove("show");
+}
+});
 
 let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
 let filter="all";
 
 const data=[
-{nama:"Nasi Goreng",harga:25000,kategori:"makanan",img:"https://source.unsplash.com/400x300/?friedrice"},
-{nama:"Es Kopi",harga:18000,kategori:"minuman",img:"https://source.unsplash.com/400x300/?coffee"},
-{nama:"Kentang",harga:15000,kategori:"cemilan",img:"https://source.unsplash.com/400x300/?fries"},
-{nama:"Paket Hemat",harga:45000,kategori:"promo",img:"https://source.unsplash.com/400x300/?foodcombo"}
+{nama:"Nasi Goreng",harga:25000,kategori:"makanan",img:"https://source.unsplash.com/600x400/?friedrice",desc:"Nasi goreng spesial dengan ayam, telur, dan bumbu rahasia Dhito Cafe."},
+
+{nama:"Es Kopi",harga:18000,kategori:"minuman",img:"https://source.unsplash.com/600x400/?coffee",desc:"Cold brew creamy dengan gula aren premium, segar dan nikmat."},
+
+{nama:"Kentang",harga:15000,kategori:"cemilan",img:"https://source.unsplash.com/600x400/?fries",desc:"Kentang goreng crispy dengan saus spesial pilihan."},
+
+{nama:"Paket Hemat",harga:45000,kategori:"promo",img:"https://source.unsplash.com/600x400/?foodcombo",desc:"Combo nasi + minuman favorit dengan harga lebih hemat."}
 ];
 
 function render(){
@@ -472,12 +592,11 @@ let badge = d.kategori==="promo"
 : `<div class="badge">BEST SELLER</div>`;
 
 menuEl.innerHTML+=`
-<div class="card">
-${badge}
+<div class="card" onclick="openMenuDetail('${d.nama}')">
 <img src="${d.img}">
 <h4>${d.nama}</h4>
 <div class="price">Rp ${d.harga.toLocaleString()}</div>
-<button onclick="add('${d.nama}')">Tambah</button>
+<button onclick="event.stopPropagation();add('${d.nama}')">Tambah</button>
 </div>`;
 });
 }
