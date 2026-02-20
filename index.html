@@ -226,6 +226,49 @@ font-weight:600;
 cursor:pointer;
 }
 
+/* ===== Dynamic Island Advanced ===== */
+.dynamic-island {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    min-height:40px;
+}
+
+.dynamic-island.expanded {
+    width:340px;
+    min-height:80px;
+}
+
+.island-badge{
+    background:#ff3b30;
+    color:white;
+    font-size:11px;
+    padding:4px 8px;
+    border-radius:20px;
+    animation:pulse 1.2s infinite;
+}
+
+@keyframes pulse{
+    0%{transform:scale(1);opacity:1;}
+    50%{transform:scale(1.1);opacity:.7;}
+    100%{transform:scale(1);opacity:1;}
+}
+
+.island-detail{
+    font-size:13px;
+    color:rgba(255,255,255,0.7);
+    margin-top:4px;
+}
+
+.close-sheet{
+    position:absolute;
+    top:18px;
+    right:20px;
+    font-size:20px;
+    cursor:pointer;
+    color:rgba(255,255,255,0.7);
+}
 </style>
 </head>
 <body>
@@ -272,21 +315,61 @@ cursor:pointer;
 
 <script>
 
+const cafeName = "☕ Dhito Cafe";
+const islandContainer = document.getElementById("island");
+const islandText = document.getElementById("islandText");
+
+let islandExpanded = false;
+let cart = JSON.parse(localStorage.getItem("cafe_cart")||"[]");
+let currentFilter="all";
+
+function toggleIsland(){
+    islandExpanded = !islandExpanded;
+    islandContainer.classList.toggle("expanded");
+
+    if(islandExpanded){
+        showIslandDetail();
+    } else {
+        islandText.innerHTML = cafeName;
+    }
+}
+
+function showIslandDetail(){
+    let totalItems = cart.reduce((a,b)=>a+b.qty,0);
+    let totalPrice = cart.reduce((a,b)=>a+(b.qty*b.harga),0);
+
+    islandText.innerHTML = `
+        <div>
+            <div><strong>${totalItems} Item</strong></div>
+            <div class="island-detail">Rp ${totalPrice.toLocaleString()}</div>
+        </div>
+    `;
+}
+
+function showIslandNotification(text){
+    islandContainer.classList.add("expanded");
+    islandText.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;">
+            <div>${text}</div>
+            <div class="island-badge">NEW</div>
+        </div>
+    `;
+
+    setTimeout(()=>{
+        islandContainer.classList.remove("expanded");
+        islandText.innerHTML = cafeName;
+    },2000);
+}
+
+/* ================= MENU ================= */
+
 const menuData=[
 {nama:"Nasi Goreng",harga:25000,kategori:"makanan",img:"https://source.unsplash.com/400x300/?friedrice"},
-{nama:"Es Kopi",harga:18000,kategori:"minuman",img:"https://source.unsplash.com/400x300/?coffee"},
+{nama:"Chicken Steak",harga:35000,kategori:"makanan",img:"https://source.unsplash.com/400x300/?steak"},
+{nama:"Es Kopi Susu",harga:18000,kategori:"minuman",img:"https://source.unsplash.com/400x300/?coffee"},
 {nama:"Kentang Goreng",harga:15000,kategori:"cemilan",img:"https://source.unsplash.com/400x300/?fries"},
 {nama:"Paket Hemat",harga:45000,kategori:"promo",img:"https://source.unsplash.com/400x300/?foodcombo"}
 ];
-
-let cart=[];
-let currentFilter="all";
-
-const island=document.getElementById("island");
-
-island.onclick=()=>{
-island.classList.toggle("expanded");
-};
 
 function renderMenu(){
 const menu=document.getElementById("menu");
@@ -302,6 +385,7 @@ menu.innerHTML+=`
 <button onclick="addToCart('${item.nama}')">Tambah</button>
 </div>`;
 });
+updateCartUI();
 }
 
 function filterMenu(k){
@@ -312,28 +396,86 @@ renderMenu();
 }
 
 function addToCart(nama){
-const item=menuData.find(i=>i.nama===nama);
-cart.push(item);
-updateCart();
-openCart();
+let existing = cart.find(i=>i.nama===nama);
+if(existing){
+existing.qty +=1;
+}else{
+const item = menuData.find(i=>i.nama===nama);
+cart.push({...item, qty:1});
+}
+saveCart();
+showIslandNotification("✔ Ditambahkan");
 }
 
-function updateCart(){
+function removeItem(index){
+if(cart[index].qty >1){
+cart[index].qty -=1;
+}else{
+cart.splice(index,1);
+}
+saveCart();
+}
+
+function saveCart(){
+localStorage.setItem("cafe_cart",JSON.stringify(cart));
+updateCartUI();
+}
+
+function updateCartUI(){
 const container=document.getElementById("cartItems");
 container.innerHTML="";
 let total=0;
 
 cart.forEach((item,i)=>{
-total+=item.harga;
+let subtotal = item.harga * item.qty;
+total += subtotal;
+
 container.innerHTML+=`
 <div class="cart-item">
-<span>${item.nama}</span>
-<span>Rp ${item.harga.toLocaleString()}</span>
+<div>
+<strong>${item.nama}</strong><br>
+<span>${item.qty} x Rp ${item.harga.toLocaleString()}</span>
+</div>
+<div>
+<button onclick="removeItem(${i})">-</button>
+</div>
 </div>`;
 });
 
-document.getElementById("cartTotal").innerHTML="<strong>Total: Rp "+total.toLocaleString()+"</strong>";
+document.getElementById("cartTotal").innerHTML =
+"<strong>Total: Rp "+total.toLocaleString()+"</strong>";
 }
+
+function checkout(){
+const name=document.getElementById("custName").value;
+const phone=document.getElementById("custPhone").value;
+const email=document.getElementById("custEmail").value;
+const payment=document.getElementById("paymentMethod").value;
+
+if(!name || !phone || !email || !payment){
+showIslandNotification("⚠ Lengkapi data");
+return;
+}
+
+if(cart.length===0){
+showIslandNotification("🛒 Keranjang kosong");
+return;
+}
+
+showIslandNotification("🎉 Berhasil!");
+
+cart=[];
+localStorage.removeItem("cafe_cart");
+updateCartUI();
+closeCart();
+
+document.getElementById("custName").value="";
+document.getElementById("custPhone").value="";
+document.getElementById("custEmail").value="";
+document.getElementById("paymentMethod").value="";
+}
+
+/* ===== Cart Sheet ===== */
 
 function openCart(){
 document.getElementById("cartSheet").classList.add("show");
@@ -343,15 +485,15 @@ function closeCart(){
 document.getElementById("cartSheet").classList.remove("show");
 }
 
-function checkout(){
-if(cart.length===0)return;
-alert("Pesanan berhasil!");
-cart=[];
-updateCart();
-closeCart();
-}
+islandContainer.onclick = openCart;
+
+/* Add Close Button to Sheet */
+document.querySelector(".cart-sheet").insertAdjacentHTML("afterbegin",
+`<div class="close-sheet" onclick="closeCart()">✕</div>`
+);
 
 renderMenu();
+islandText.innerHTML = cafeName;
 
 </script>
 </body>
