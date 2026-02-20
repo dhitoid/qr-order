@@ -365,6 +365,34 @@ width:40%;
 background:linear-gradient(90deg,#1db954,#1ed760);
 transition:width .6s ease;
 }
+
+/* === PAYMENT STATES === */
+.island-status{
+font-size:13px;
+opacity:.8;
+margin-top:6px;
+}
+
+.island-progress{
+margin-top:10px;
+height:6px;
+background:rgba(255,255,255,0.15);
+border-radius:10px;
+overflow:hidden;
+}
+
+.island-progress-bar{
+height:100%;
+width:0%;
+background:linear-gradient(90deg,#1db954,#4f9cff);
+transition:width .8s cubic-bezier(.22,1,.36,1);
+}
+
+.dynamic-island.payment{
+background:linear-gradient(145deg,#1c2738,#0f1725);
+border:1px solid rgba(255,255,255,0.15);
+box-shadow:0 0 40px rgba(79,156,255,0.35);
+}
 </style>
 </head>
 <body>
@@ -476,39 +504,63 @@ document.getElementById("greeting").innerText=greet+", Dhito";
 setGreeting();
 
 function checkoutProgress(){
+
 island.classList.remove("success","danger","warning","info");
-island.classList.add("expand","info");
+island.classList.add("expand","payment");
+
 island.innerHTML=`
-🧾 Memproses Pesanan...
+💳 Memproses Pembayaran
+<div class="island-status" id="payStatus">
+Menghubungi gateway...
+</div>
 <div class="island-progress">
 <div class="island-progress-bar" id="progressBar"></div>
 </div>
 `;
 
 let bar=document.getElementById("progressBar");
+let status=document.getElementById("payStatus");
 
-let steps=[25,55,85,100];
+let steps=[
+{w:20, text:"Menghubungi gateway..."},
+{w:45, text:"Verifikasi keamanan 🔐"},
+{w:70, text:"Menunggu konfirmasi bank..."},
+{w:90, text:"Menyelesaikan transaksi..."},
+{w:100, text:"Pembayaran berhasil ✅"}
+];
+
 let i=0;
 
 let interval=setInterval(()=>{
-bar.style.width=steps[i]+"%";
+bar.style.width=steps[i].w+"%";
+status.innerText=steps[i].text;
 i++;
 
 if(i>=steps.length){
 clearInterval(interval);
 
 setTimeout(()=>{
-island.classList.remove("info");
+island.classList.remove("payment");
 island.classList.add("success");
-island.innerHTML="🎉 Pesanan Berhasil!";
+
+let total=document.getElementById("total").innerText;
+
+island.innerHTML=`
+🎉 Pembayaran Sukses
+<div class="island-status">${total}</div>
+`;
+
+confettiEffect();
+
 setTimeout(()=>{
 island.classList.remove("expand","success");
 island.innerHTML="☕ Dhito Cafe";
-},2000);
-},800);
+},2500);
+
+},700 + Math.random()*600);
 }
 
-},700);
+},700 + Math.random()*600);
 }
 
 function add(n){
