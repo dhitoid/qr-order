@@ -92,10 +92,12 @@ background:linear-gradient(90deg,#fff,#9ecbff);
 
 /* ================= CATEGORY ================= */
 .categories{
-display:flex;
-gap:12px;
-padding:0 20px 25px;
-overflow-x:auto;
+position:sticky;
+top:70px;
+z-index:40;
+background:linear-gradient(180deg,#0e1627,#0e1627dd);
+backdrop-filter:blur(20px);
+padding:15px 20px;
 }
 
 .categories button{
@@ -566,6 +568,83 @@ min-width:20px;
 text-align:center;
 }
 
+.category-dropdown{
+position:relative;
+}
+
+.dropdown-btn{
+display:flex;
+align-items:center;
+gap:6px;
+}
+
+.dropdown-menu{
+position:absolute;
+top:48px;
+left:0;
+min-width:200px;
+
+background:rgba(20,30,50,0.9);
+backdrop-filter:blur(60px);
+border-radius:22px;
+padding:8px;
+
+border:1px solid rgba(255,255,255,0.08);
+
+transform-origin:top;
+transform:scaleY(0);
+opacity:0;
+transition:transform .35s cubic-bezier(.22,1,.36,1),
+opacity .25s ease;
+
+overflow:hidden;
+}
+
+.dropdown-menu.show{
+transform:scaleY(1);
+opacity:1;
+}
+
+.dropdown-menu div{
+padding:12px 14px;
+border-radius:14px;
+cursor:pointer;
+font-size:14px;
+transition:.25s;
+color:rgba(255,255,255,0.8);
+}
+
+.dropdown-menu div:hover{
+background:linear-gradient(135deg,var(--accent),var(--accent2));
+color:white;
+}
+
+.search-container{
+padding:0 20px 20px;
+position:sticky;
+top:0;
+z-index:50;
+background:linear-gradient(180deg,#0e1627,#0e1627cc);
+backdrop-filter:blur(20px);
+}
+
+#searchInput{
+width:100%;
+padding:14px 20px;
+border-radius:30px;
+border:1px solid rgba(255,255,255,0.08);
+background:rgba(255,255,255,0.06);
+color:white;
+font-size:14px;
+outline:none;
+transition:.3s;
+}
+
+#searchInput:focus{
+border:1px solid var(--accent);
+box-shadow:0 0 20px rgba(79,156,255,0.3);
+}
+
 </style>
 </head>
 <body>
@@ -577,12 +656,31 @@ text-align:center;
   <div class="headline">Siap nongki hari ini?</div>
 </div>
 
+<div class="search-container">
+<input type="text" id="searchInput" placeholder="Cari menu favoritmu...">
+</div>
+
 <div class="categories">
-<button class="active" onclick="filterMenu('all',this)">Semua</button>
+
+<div class="category-dropdown">
+  <button class="active dropdown-btn" onclick="toggleDropdown(event)">
+    Semua ⌄
+  </button>
+
+  <div class="dropdown-menu" id="categoryDropdown">
+    <div onclick="selectCategory('all')">Semua</div>
+    <div onclick="selectCategory('makanan')">🍛 Makanan</div>
+    <div onclick="selectCategory('minuman')">☕ Minuman</div>
+    <div onclick="selectCategory('cemilan')">🍟 Cemilan</div>
+    <div onclick="selectCategory('promo')">🔥 Promo</div>
+  </div>
+</div>
+
 <button onclick="filterMenu('makanan',this)">Makanan</button>
 <button onclick="filterMenu('minuman',this)">Minuman</button>
 <button onclick="filterMenu('cemilan',this)">Cemilan</button>
 <button onclick="filterMenu('promo',this)">Promo</button>
+
 </div>
 
 <div class="menu-grid" id="menu"></div>
@@ -681,6 +779,39 @@ let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
 let filter="all";
 let selectedToppings=[];
 let modalQty = 1;
+let searchQuery="";
+
+document.getElementById("searchInput")
+.addEventListener("input",(e)=>{
+searchQuery=e.target.value.toLowerCase();
+render();
+});
+
+window.addEventListener("scroll",()=>{
+
+let sections=document.querySelectorAll(".menu-section");
+
+sections.forEach(sec=>{
+let rect=sec.getBoundingClientRect();
+
+if(rect.top<=150 && rect.bottom>=150){
+
+let id=sec.id.replace("section-","");
+
+document.querySelectorAll(".categories button")
+.forEach(b=>b.classList.remove("active"));
+
+document.querySelectorAll(".categories button")
+.forEach(btn=>{
+if(btn.innerText.toLowerCase().includes(id)){
+btn.classList.add("active");
+}
+});
+
+}
+});
+
+});
 
 const toppingsData = [
 {nama:"Extra Keju",harga:5000},
@@ -712,6 +843,35 @@ ${t.nama} (+Rp ${t.harga.toLocaleString()})
 </div>`;
 });
 }
+
+function toggleDropdown(e){
+e.stopPropagation();
+document.getElementById("categoryDropdown").classList.toggle("show");
+}
+
+function selectCategory(k){
+
+filter=k;
+render();
+
+document.querySelectorAll(".categories button")
+.forEach(b=>b.classList.remove("active"));
+
+document.querySelector(".dropdown-btn").classList.add("active");
+
+document.getElementById("categoryDropdown").classList.remove("show");
+
+notify(`📂 Kategori: ${k.toUpperCase()}`,"info");
+
+/* auto scroll ke menu */
+document.getElementById("menu")
+.scrollIntoView({behavior:"smooth"});
+}
+
+/* close dropdown jika klik luar */
+document.addEventListener("click",()=>{
+document.getElementById("categoryDropdown").classList.remove("show");
+});
 
 function toggleTopping(nama){
 let index=selectedToppings.findIndex(t=>t.nama===nama);
@@ -793,21 +953,41 @@ updatePrice(data.find(d=>d.nama===modalTitle.innerText));
 }
 
 function render(){
-menuEl.innerHTML="";
-data.filter(d=>filter==="all"||d.kategori===filter)
-.forEach(d=>{
 
-let badge = d.kategori==="promo"
-? `<div class="badge promo">PROMO</div>`
-: `<div class="badge">BEST SELLER</div>`;
+menuEl.innerHTML="";
+
+let filtered=data.filter(d=>{
+return (filter==="all"||d.kategori===filter) &&
+(d.nama.toLowerCase().includes(searchQuery));
+});
+
+let grouped={};
+
+filtered.forEach(item=>{
+if(!grouped[item.kategori]) grouped[item.kategori]=[];
+grouped[item.kategori].push(item);
+});
+
+Object.keys(grouped).forEach(kat=>{
 
 menuEl.innerHTML+=`
+<div class="menu-section" id="section-${kat}">
+<h3 class="section-title">${kat.toUpperCase()}</h3>
+<div class="menu-grid">
+${grouped[kat].map(d=>`
 <div class="card" onclick="openMenuDetail('${d.nama}')">
 <img src="${d.img}">
 <h4>${d.nama}</h4>
 <div class="price">Rp ${d.harga.toLocaleString()}</div>
-<button onclick="event.stopPropagation();openMenuDetail('${d.nama}')">Detail</button>
-</div>`;
+<button onclick="event.stopPropagation();openMenuDetail('${d.nama}')">
+Tambah
+</button>
+</div>
+`).join("")}
+</div>
+</div>
+`;
+
 });
 }
 
