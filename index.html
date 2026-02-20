@@ -3,135 +3,114 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dhito Cafe 2026 PRO</title>
+<title>Dhito Cafe 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
---bg1:#0b0f1a;
---bg2:#101826;
+--bg:#0c111d;
+--card:rgba(255,255,255,0.06);
+--glass:rgba(255,255,255,0.08);
 --accent:#4f9cff;
---accent-soft:rgba(79,156,255,0.18);
---glass:rgba(255,255,255,0.06);
---text2:rgba(255,255,255,.65);
---radius:26px;
+--danger:#ff3b30;
+--radius:24px;
 }
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Inter',sans-serif;
--webkit-tap-highlight-color:transparent;
-}
-
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
 body{
-background:
-radial-gradient(circle at 20% 20%, #16213e 0%, transparent 40%),
-radial-gradient(circle at 80% 0%, #1f4068 0%, transparent 40%),
-linear-gradient(180deg,var(--bg1),var(--bg2));
-color:#fff;
-padding-bottom:150px;
+background:radial-gradient(circle at 20% 10%,#1b2a4f 0%,transparent 40%),
+linear-gradient(180deg,#0b0f1a,#111a2b);
+color:white;
 overflow-x:hidden;
+padding-bottom:120px;
 }
 
-/* ================= DYNAMIC ISLAND TITLE ================= */
-
+/* ================= DYNAMIC ISLAND ================= */
 .dynamic-island{
 position:fixed;
-top:18px;
+top:20px;
 left:50%;
 transform:translateX(-50%);
-background:#000;
-padding:12px 28px;
-border-radius:50px;
+background:rgba(0,0,0,0.75);
+backdrop-filter:blur(30px);
+padding:12px 22px;
+border-radius:40px;
 font-size:14px;
-font-weight:500;
-cursor:pointer;
-transition:all .55s cubic-bezier(.22,1,.36,1);
+transition:all .45s cubic-bezier(.22,1,.36,1);
 z-index:9999;
-box-shadow:
-0 15px 50px rgba(0,0,0,.6),
-inset 0 0 0 1px rgba(255,255,255,.08);
+box-shadow:0 10px 40px rgba(0,0,0,0.6);
 }
 
-.dynamic-island.expanded{
-width:320px;
+.dynamic-island.expand{
+width:300px;
 border-radius:28px;
-padding:22px;
 }
 
-.island-title{
-font-weight:600;
-letter-spacing:.3px;
+.island-badge{
+background:var(--danger);
+padding:4px 8px;
+font-size:11px;
+border-radius:20px;
+margin-left:8px;
+animation:pulse 1.3s infinite;
 }
 
-.island-sub{
-font-size:12px;
-color:var(--text2);
-margin-top:6px;
-opacity:0;
-transition:.4s;
-}
-
-.dynamic-island.expanded .island-sub{
-opacity:1;
+@keyframes pulse{
+0%{transform:scale(1)}
+50%{transform:scale(1.1)}
+100%{transform:scale(1)}
 }
 
 /* ================= HEADER ================= */
-
 .header{
-margin-top:90px;
 text-align:center;
-font-size:24px;
-font-weight:600;
+padding:90px 20px 30px;
+font-size:28px;
+font-weight:700;
 }
 
 /* ================= CATEGORY ================= */
-
 .categories{
 display:flex;
 gap:10px;
-padding:18px;
+padding:0 20px 20px;
 overflow-x:auto;
 }
 
 .categories button{
 background:var(--glass);
-border:1px solid rgba(255,255,255,.08);
-padding:9px 18px;
-border-radius:40px;
-color:var(--text2);
+border:none;
+padding:10px 18px;
+border-radius:30px;
+color:rgba(255,255,255,0.7);
 cursor:pointer;
 transition:.3s;
 }
 
 .categories button.active{
-background:var(--accent-soft);
-border:1px solid var(--accent);
-color:var(--accent);
+background:var(--accent);
+color:white;
 }
 
 /* ================= MENU ================= */
-
 .menu-grid{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-gap:18px;
-padding:20px;
+grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+gap:20px;
+padding:0 20px;
 }
 
 .card{
-background:var(--glass);
-backdrop-filter:blur(25px);
+background:var(--card);
+backdrop-filter:blur(20px);
 border-radius:var(--radius);
-padding:14px;
+padding:15px;
 transition:.35s;
-border:1px solid rgba(255,255,255,.08);
 }
 
 .card:hover{
 transform:translateY(-6px);
+background:rgba(255,255,255,0.12);
 }
 
 .card img{
@@ -142,359 +121,243 @@ border-radius:18px;
 margin-bottom:10px;
 }
 
-.card h4{
-font-size:14px;
-margin-bottom:5px;
-}
-
-.price{
-color:var(--accent);
-font-weight:600;
-margin-bottom:10px;
-}
+.price{color:var(--accent);font-weight:600;margin-bottom:10px;}
 
 .card button{
 width:100%;
-padding:9px;
+padding:10px;
 border:none;
-border-radius:14px;
+border-radius:18px;
 background:linear-gradient(135deg,var(--accent),#7ab8ff);
-color:#fff;
+color:white;
 font-weight:600;
 cursor:pointer;
 }
 
-/* ================= CART SLIDE ================= */
+/* ================= FLOATING CART ================= */
+.floating-cart{
+position:fixed;
+right:20px;
+bottom:20px;
+background:linear-gradient(135deg,var(--accent),#7ab8ff);
+width:60px;
+height:60px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+cursor:pointer;
+box-shadow:0 10px 30px rgba(79,156,255,0.4);
+z-index:999;
+}
 
-.cart-sheet{
+.cart-count{
+position:absolute;
+top:-5px;
+right:-5px;
+background:var(--danger);
+font-size:11px;
+padding:4px 7px;
+border-radius:20px;
+}
+
+/* ================= SHEET ================= */
+.sheet{
 position:fixed;
 left:0;right:0;
 bottom:-100%;
-height:75%;
-background:rgba(15,20,35,.97);
-backdrop-filter:blur(35px);
-border-top-left-radius:40px;
-border-top-right-radius:40px;
-padding:30px 20px;
-transition:bottom .55s cubic-bezier(.22,1,.36,1);
+height:80%;
+background:#111a2b;
+border-top-left-radius:36px;
+border-top-right-radius:36px;
+transition:bottom .5s cubic-bezier(.22,1,.36,1);
+padding:20px;
 overflow-y:auto;
-z-index:9998;
+z-index:1000;
 }
 
-.cart-sheet.show{
-bottom:0;
+.sheet.show{bottom:0;}
+
+.sheet .handle{
+width:50px;
+height:5px;
+background:rgba(255,255,255,0.3);
+border-radius:10px;
+margin:0 auto 15px;
 }
 
-.drag-close{
-width:60px;
-height:6px;
-background:rgba(255,255,255,.35);
-border-radius:20px;
+.close{
 position:absolute;
-top:12px;
-left:50%;
-transform:translateX(-50%);
+top:20px;
+right:20px;
+font-size:20px;
 cursor:pointer;
 }
 
 .cart-item{
 display:flex;
 justify-content:space-between;
-margin-bottom:12px;
-padding-bottom:8px;
-border-bottom:1px solid rgba(255,255,255,.05);
-font-size:14px;
+margin-bottom:10px;
+padding-bottom:10px;
+border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.checkout-btn{
+margin-top:15px;
+width:100%;
+padding:15px;
+border:none;
+border-radius:20px;
+background:linear-gradient(135deg,var(--accent),#7ab8ff);
+color:white;
+font-weight:600;
+cursor:pointer;
 }
 
 .input{
 width:100%;
 padding:14px;
-margin-bottom:12px;
-border-radius:16px;
-border:1px solid rgba(255,255,255,.08);
-background:rgba(255,255,255,.05);
-color:#fff;
-}
-
-.checkout-btn{
-width:100%;
-padding:15px;
+border-radius:18px;
 border:none;
-border-radius:22px;
-background:linear-gradient(135deg,var(--accent),#7ab8ff);
-font-weight:600;
-cursor:pointer;
-}
-
-/* ===== Dynamic Island Advanced ===== */
-.dynamic-island {
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:10px;
-    min-height:40px;
-}
-
-.dynamic-island.expanded {
-    width:340px;
-    min-height:80px;
-}
-
-.island-badge{
-    background:#ff3b30;
-    color:white;
-    font-size:11px;
-    padding:4px 8px;
-    border-radius:20px;
-    animation:pulse 1.2s infinite;
-}
-
-@keyframes pulse{
-    0%{transform:scale(1);opacity:1;}
-    50%{transform:scale(1.1);opacity:.7;}
-    100%{transform:scale(1);opacity:1;}
-}
-
-.island-detail{
-    font-size:13px;
-    color:rgba(255,255,255,0.7);
-    margin-top:4px;
-}
-
-.close-sheet{
-    position:absolute;
-    top:18px;
-    right:20px;
-    font-size:20px;
-    cursor:pointer;
-    color:rgba(255,255,255,0.7);
+margin-bottom:10px;
+background:rgba(255,255,255,0.08);
+color:white;
 }
 </style>
 </head>
 <body>
 
-<!-- DYNAMIC ISLAND TITLE -->
-<div class="dynamic-island" id="island">
-<div class="island-title">☕ Dhito Cafe</div>
-<div class="island-sub">Modern Experience 2026</div>
-</div>
+<div class="dynamic-island" id="island">☕ Dhito Cafe</div>
 
-<div class="header">Menu Order</div>
+<div class="header">Menu Favorit</div>
 
 <div class="categories">
-<button onclick="filterMenu('all')" class="active">Semua</button>
-<button onclick="filterMenu('makanan')">Makanan</button>
-<button onclick="filterMenu('minuman')">Minuman</button>
-<button onclick="filterMenu('cemilan')">Cemilan</button>
-<button onclick="filterMenu('promo')">Promo</button>
+<button class="active" onclick="filterMenu('all',this)">Semua</button>
+<button onclick="filterMenu('makanan',this)">Makanan</button>
+<button onclick="filterMenu('minuman',this)">Minuman</button>
+<button onclick="filterMenu('cemilan',this)">Cemilan</button>
+<button onclick="filterMenu('promo',this)">Promo</button>
 </div>
 
 <div class="menu-grid" id="menu"></div>
 
-<!-- CART -->
-<div class="cart-sheet" id="cartSheet">
-<div class="drag-close" onclick="closeCart()"></div>
+<div class="floating-cart" onclick="openSheet()">
+🛒
+<div class="cart-count" id="cartCount">0</div>
+</div>
 
-<h3 style="margin-bottom:15px;">Detail Pesanan</h3>
+<div class="sheet" id="sheet">
+<div class="handle"></div>
+<div class="close" onclick="closeSheet()">✕</div>
+
+<h3>Detail Pesanan</h3>
 <div id="cartItems"></div>
-<div id="cartTotal" style="margin:15px 0;"></div>
+<h4 id="total"></h4>
 
-<h3 style="margin-bottom:15px;">Data Pemesan</h3>
-<input class="input" id="custName" placeholder="Nama">
-<input class="input" id="custPhone" placeholder="No HP">
-<select class="input" id="paymentMethod">
-<option value="">Metode Pembayaran</option>
+<hr style="margin:15px 0;border-color:rgba(255,255,255,0.1)">
+
+<h3>Pembayaran</h3>
+<input class="input" placeholder="Nama">
+<input class="input" placeholder="No HP">
+<select class="input">
+<option>Metode Pembayaran</option>
 <option>Cash</option>
 <option>QRIS</option>
-<option>Transfer Bank</option>
-<option>Debit / Kredit</option>
+<option>Transfer</option>
 </select>
 
-<button class="checkout-btn" onclick="checkout()">Konfirmasi Pesanan</button>
+<button class="checkout-btn" onclick="checkout()">Bayar Sekarang</button>
 </div>
 
 <script>
+const island=document.getElementById("island");
+const menuEl=document.getElementById("menu");
+const sheet=document.getElementById("sheet");
+const cartCount=document.getElementById("cartCount");
 
-const cafeName = "☕ Dhito Cafe";
-const islandContainer = document.getElementById("island");
-const islandText = document.getElementById("islandText");
+let cart=[];
+let filter="all";
 
-let islandExpanded = false;
-let cart = JSON.parse(localStorage.getItem("cafe_cart")||"[]");
-let currentFilter="all";
-
-function toggleIsland(){
-    islandExpanded = !islandExpanded;
-    islandContainer.classList.toggle("expanded");
-
-    if(islandExpanded){
-        showIslandDetail();
-    } else {
-        islandText.innerHTML = cafeName;
-    }
-}
-
-function showIslandDetail(){
-    let totalItems = cart.reduce((a,b)=>a+b.qty,0);
-    let totalPrice = cart.reduce((a,b)=>a+(b.qty*b.harga),0);
-
-    islandText.innerHTML = `
-        <div>
-            <div><strong>${totalItems} Item</strong></div>
-            <div class="island-detail">Rp ${totalPrice.toLocaleString()}</div>
-        </div>
-    `;
-}
-
-function showIslandNotification(text){
-    islandContainer.classList.add("expanded");
-    islandText.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;">
-            <div>${text}</div>
-            <div class="island-badge">NEW</div>
-        </div>
-    `;
-
-    setTimeout(()=>{
-        islandContainer.classList.remove("expanded");
-        islandText.innerHTML = cafeName;
-    },2000);
-}
-
-/* ================= MENU ================= */
-
-const menuData=[
+const data=[
 {nama:"Nasi Goreng",harga:25000,kategori:"makanan",img:"https://source.unsplash.com/400x300/?friedrice"},
-{nama:"Chicken Steak",harga:35000,kategori:"makanan",img:"https://source.unsplash.com/400x300/?steak"},
-{nama:"Es Kopi Susu",harga:18000,kategori:"minuman",img:"https://source.unsplash.com/400x300/?coffee"},
-{nama:"Kentang Goreng",harga:15000,kategori:"cemilan",img:"https://source.unsplash.com/400x300/?fries"},
+{nama:"Es Kopi",harga:18000,kategori:"minuman",img:"https://source.unsplash.com/400x300/?coffee"},
+{nama:"Kentang",harga:15000,kategori:"cemilan",img:"https://source.unsplash.com/400x300/?fries"},
 {nama:"Paket Hemat",harga:45000,kategori:"promo",img:"https://source.unsplash.com/400x300/?foodcombo"}
 ];
 
-function renderMenu(){
-const menu=document.getElementById("menu");
-menu.innerHTML="";
-const filtered=currentFilter==="all"?menuData:menuData.filter(i=>i.kategori===currentFilter);
-
-filtered.forEach(item=>{
-menu.innerHTML+=`
+function render(){
+menuEl.innerHTML="";
+data.filter(d=>filter==="all"||d.kategori===filter)
+.forEach(d=>{
+menuEl.innerHTML+=`
 <div class="card">
-<img src="${item.img}">
-<h4>${item.nama}</h4>
-<div class="price">Rp ${item.harga.toLocaleString()}</div>
-<button onclick="addToCart('${item.nama}')">Tambah</button>
+<img src="${d.img}">
+<h4>${d.nama}</h4>
+<div class="price">Rp ${d.harga.toLocaleString()}</div>
+<button onclick="add('${d.nama}')">Tambah</button>
 </div>`;
 });
-updateCartUI();
 }
 
-function filterMenu(k){
-currentFilter=k;
+function filterMenu(k,btn){
+filter=k;
 document.querySelectorAll(".categories button").forEach(b=>b.classList.remove("active"));
-event.target.classList.add("active");
-renderMenu();
+btn.classList.add("active");
+render();
 }
 
-function addToCart(nama){
-let existing = cart.find(i=>i.nama===nama);
-if(existing){
-existing.qty +=1;
-}else{
-const item = menuData.find(i=>i.nama===nama);
-cart.push({...item, qty:1});
+function add(n){
+let item=cart.find(i=>i.nama===n);
+if(item){item.qty++}
+else{
+let d=data.find(x=>x.nama===n);
+cart.push({...d,qty:1});
 }
-saveCart();
-showIslandNotification("✔ Ditambahkan");
-}
-
-function removeItem(index){
-if(cart[index].qty >1){
-cart[index].qty -=1;
-}else{
-cart.splice(index,1);
-}
-saveCart();
+updateCart();
+notify("Ditambahkan ke keranjang");
 }
 
-function saveCart(){
-localStorage.setItem("cafe_cart",JSON.stringify(cart));
-updateCartUI();
-}
-
-function updateCartUI(){
-const container=document.getElementById("cartItems");
-container.innerHTML="";
+function updateCart(){
 let total=0;
-
-cart.forEach((item,i)=>{
-let subtotal = item.harga * item.qty;
-total += subtotal;
-
-container.innerHTML+=`
-<div class="cart-item">
-<div>
-<strong>${item.nama}</strong><br>
-<span>${item.qty} x Rp ${item.harga.toLocaleString()}</span>
-</div>
-<div>
-<button onclick="removeItem(${i})">-</button>
-</div>
+document.getElementById("cartItems").innerHTML=
+cart.map((i,idx)=>{
+total+=i.harga*i.qty;
+return `<div class="cart-item">
+<span>${i.nama} x${i.qty}</span>
+<button onclick="remove(${idx})">-</button>
 </div>`;
-});
+}).join("");
 
-document.getElementById("cartTotal").innerHTML =
-"<strong>Total: Rp "+total.toLocaleString()+"</strong>";
+document.getElementById("total").innerText="Total: Rp "+total.toLocaleString();
+cartCount.innerText=cart.reduce((a,b)=>a+b.qty,0);
+}
+
+function remove(i){
+cart.splice(i,1);
+updateCart();
+}
+
+function openSheet(){sheet.classList.add("show")}
+function closeSheet(){sheet.classList.remove("show")}
+
+function notify(text){
+island.classList.add("expand");
+island.innerHTML=text+" <span class='island-badge'>NEW</span>";
+setTimeout(()=>{
+island.classList.remove("expand");
+island.innerHTML="☕ Dhito Cafe";
+},2000);
 }
 
 function checkout(){
-const name=document.getElementById("custName").value;
-const phone=document.getElementById("custPhone").value;
-const email=document.getElementById("custEmail").value;
-const payment=document.getElementById("paymentMethod").value;
-
-if(!name || !phone || !email || !payment){
-showIslandNotification("⚠ Lengkapi data");
-return;
-}
-
-if(cart.length===0){
-showIslandNotification("🛒 Keranjang kosong");
-return;
-}
-
-showIslandNotification("🎉 Berhasil!");
-
 cart=[];
-localStorage.removeItem("cafe_cart");
-updateCartUI();
-closeCart();
-
-document.getElementById("custName").value="";
-document.getElementById("custPhone").value="";
-document.getElementById("custEmail").value="";
-document.getElementById("paymentMethod").value="";
+updateCart();
+closeSheet();
+notify("Pesanan Berhasil 🎉");
 }
 
-/* ===== Cart Sheet ===== */
-
-function openCart(){
-document.getElementById("cartSheet").classList.add("show");
-}
-
-function closeCart(){
-document.getElementById("cartSheet").classList.remove("show");
-}
-
-islandContainer.onclick = openCart;
-
-/* Add Close Button to Sheet */
-document.querySelector(".cart-sheet").insertAdjacentHTML("afterbegin",
-`<div class="close-sheet" onclick="closeCart()">✕</div>`
-);
-
-renderMenu();
-islandText.innerHTML = cafeName;
-
+render();
 </script>
 </body>
 </html>
