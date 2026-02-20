@@ -3,51 +3,247 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Modern Catalog QR Order</title>
+<title>Urban Cafe 2026</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Inter',sans-serif;
+}
+
+body{
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:#fff;
+padding-bottom:120px;
+}
+
+/* HEADER */
+.header{
+position:sticky;
+top:0;
+background:rgba(15,23,42,0.8);
+backdrop-filter:blur(20px);
+padding:20px;
+text-align:center;
+font-weight:700;
+font-size:22px;
+z-index:10;
+}
+
+/* CATEGORY */
+.categories{
+display:flex;
+gap:10px;
+padding:15px;
+overflow-x:auto;
+}
+
+.categories button{
+background:#1e293b;
+border:none;
+color:#fff;
+padding:10px 16px;
+border-radius:30px;
+cursor:pointer;
+transition:.3s;
+}
+
+.categories button.active,
+.categories button:hover{
+background:#22c55e;
+}
+
+/* GRID */
+.menu-grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:15px;
+padding:15px;
+}
+
+.card{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(15px);
+border-radius:20px;
+padding:15px;
+transition:.3s;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+}
+
+.card:hover{
+transform:translateY(-5px);
+background:rgba(255,255,255,0.1);
+}
+
+.card img{
+width:100%;
+border-radius:15px;
+margin-bottom:10px;
+}
+
+.card h4{
+font-size:16px;
+margin-bottom:5px;
+}
+
+.price{
+font-weight:600;
+margin-bottom:10px;
+color:#22c55e;
+}
+
+.card button{
+padding:8px;
+border:none;
+border-radius:12px;
+background:#22c55e;
+color:#000;
+font-weight:600;
+cursor:pointer;
+}
+
+/* CART */
+.cart{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:rgba(15,23,42,0.9);
+backdrop-filter:blur(20px);
+padding:15px;
+border-top:1px solid rgba(255,255,255,0.1);
+}
+
+.cart-summary{
+display:flex;
+justify-content:space-between;
+margin-bottom:10px;
+}
+
+.cart button{
+width:100%;
+padding:12px;
+border:none;
+border-radius:15px;
+background:#22c55e;
+font-weight:700;
+cursor:pointer;
+}
+
+.empty{
+text-align:center;
+opacity:.5;
+margin-top:40px;
+}
+</style>
 </head>
+
 <body>
 
-<div class="hero">
-  <h1>Dhito Cafe</h1>
-  <p id="tableInfo"></p>
+<div class="header">☕ Urban Cafe 2026</div>
+
+<div class="categories">
+<button onclick="filterMenu('all')" class="active">Semua</button>
+<button onclick="filterMenu('makanan')">Makanan</button>
+<button onclick="filterMenu('minuman')">Minuman</button>
+<button onclick="filterMenu('cemilan')">Cemilan</button>
+<button onclick="filterMenu('promo')">Promo Paket</button>
 </div>
 
-<div class="category-scroll" id="categoryList"></div>
+<div class="menu-grid" id="menu"></div>
 
-<div class="menu-container" id="menuList"></div>
-
-<div class="cart-floating" onclick="openCart()">
-  🛒 <span id="cartCount">0</span>
+<div class="cart">
+<div class="cart-summary">
+<span>Total:</span>
+<span id="total">Rp 0</span>
+</div>
+<button onclick="checkout()">Pesan Sekarang</button>
 </div>
 
-<div class="cart-modal" id="cartModal">
-  <div class="cart-content">
-    <div class="cart-header">
-      <h2>Keranjang</h2>
-      <span onclick="closeCart()">✕</span>
-    </div>
+<script>
 
-    <div id="cartItems"></div>
+const menuData = [
+{nama:"Nasi Goreng Special",harga:25000,kategori:"makanan",img:"https://source.unsplash.com/400x300/?friedrice"},
+{nama:"Chicken Steak",harga:35000,kategori:"makanan",img:"https://source.unsplash.com/400x300/?steak"},
+{nama:"Es Kopi Susu",harga:18000,kategori:"minuman",img:"https://source.unsplash.com/400x300/?coffee"},
+{nama:"Matcha Latte",harga:22000,kategori:"minuman",img:"https://source.unsplash.com/400x300/?matcha"},
+{nama:"Kentang Goreng",harga:15000,kategori:"cemilan",img:"https://source.unsplash.com/400x300/?fries"},
+{nama:"Onion Ring",harga:17000,kategori:"cemilan",img:"https://source.unsplash.com/400x300/?onionrings"},
+{nama:"Paket Hemat 1",harga:45000,kategori:"promo",img:"https://source.unsplash.com/400x300/?foodcombo"},
+{nama:"Paket Couple",harga:75000,kategori:"promo",img:"https://source.unsplash.com/400x300/?dinner"}
+];
 
-    <div class="summary">
-      <p>Subtotal <span id="subtotal"></span></p>
-      <p>Pajak 10% <span id="tax"></span></p>
-      <p>Service 5% <span id="service"></span></p>
-      <h3>Total <span id="total"></span></h3>
-    </div>
+let cart = [];
+let currentFilter = "all";
 
-    <button class="btn primary" onclick="checkout('kasir')">
-      Bayar di Kasir
-    </button>
+function renderMenu(){
+const menu = document.getElementById("menu");
+menu.innerHTML = "";
 
-    <button class="btn secondary" onclick="checkout('online')">
-      Bayar Online (Demo)
-    </button>
-  </div>
+const filtered = currentFilter==="all" 
+? menuData 
+: menuData.filter(item=>item.kategori===currentFilter);
+
+if(filtered.length===0){
+menu.innerHTML = "<div class='empty'>Menu tidak ditemukan</div>";
+return;
+}
+
+filtered.forEach(item=>{
+menu.innerHTML += `
+<div class="card">
+<img src="${item.img}">
+<h4>${item.nama}</h4>
+<div class="price">Rp ${item.harga.toLocaleString()}</div>
+<button onclick='addToCart(${JSON.stringify(item)})'>Tambah</button>
 </div>
+`;
+});
+}
 
-<script src="script.js"></script>
+function filterMenu(kategori){
+currentFilter = kategori;
+document.querySelectorAll(".categories button").forEach(btn=>btn.classList.remove("active"));
+event.target.classList.add("active");
+renderMenu();
+}
+
+function addToCart(item){
+cart.push(item);
+updateCart();
+}
+
+function updateCart(){
+const total = cart.reduce((sum,item)=>sum+item.harga,0);
+document.getElementById("total").innerText = "Rp "+total.toLocaleString();
+}
+
+function checkout(){
+if(cart.length===0){
+alert("Keranjang masih kosong!");
+return;
+}
+
+let pesan = "Halo, saya ingin order:%0A";
+cart.forEach(item=>{
+pesan += `- ${item.nama} (Rp ${item.harga})%0A`;
+});
+
+let total = cart.reduce((sum,item)=>sum+item.harga,0);
+pesan += `%0ATotal: Rp ${total}`;
+
+window.open(`https://wa.me/628XXXXXXXXXX?text=${pesan}`);
+}
+
+renderMenu();
+
+</script>
+
 </body>
 </html>
