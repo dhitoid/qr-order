@@ -473,6 +473,39 @@ transition:.3s;
 .modal-add:hover{
 transform:scale(1.04);
 }
+
+.topping-section{
+margin-bottom:16px;
+}
+
+.topping-section h4{
+font-size:14px;
+opacity:.7;
+margin-bottom:8px;
+}
+
+.topping-list{
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.topping-item{
+padding:8px 12px;
+border-radius:20px;
+font-size:12px;
+cursor:pointer;
+background:#1f2937;
+transition:.3s;
+border:1px solid transparent;
+}
+
+.topping-item.active{
+background:linear-gradient(135deg,#4f9cff,#7ab8ff);
+color:white;
+border:1px solid #7ab8ff;
+}
+
 </style>
 </head>
 <body>
@@ -530,11 +563,17 @@ transform:scale(1.04);
   <div class="menu-modal-content">
     <div class="menu-modal-img" id="modalImg"></div>
     <div class="menu-modal-body">
-      <h2 id="modalTitle"></h2>
-      <p id="modalDesc"></p>
-      <div class="modal-price" id="modalPrice"></div>
-      <button class="modal-add" id="modalAddBtn">Tambah ke Keranjang</button>
-    </div>
+  <h2 id="modalTitle"></h2>
+  <p id="modalDesc"></p>
+
+  <div class="topping-section">
+    <h4>Pilih Topping</h4>
+    <div class="topping-list" id="toppingList"></div>
+  </div>
+
+  <div class="modal-price" id="modalPrice"></div>
+  <button class="modal-add" id="modalAddBtn">Tambah ke Keranjang</button>
+</div>
   </div>
 </div>
 
@@ -552,13 +591,16 @@ const modalAddBtn=document.getElementById("modalAddBtn");
 
 function openMenuDetail(n){
 let item=data.find(d=>d.nama===n);
+selectedToppings=[];
 
 modalImg.style.backgroundImage=`url('${item.img}')`;
 modalTitle.innerText=item.nama;
 modalDesc.innerText=item.desc;
-modalPrice.innerText="Rp "+item.harga.toLocaleString();
 
-modalAddBtn.onclick=()=>add(item.nama);
+renderToppings();
+updatePrice(item);
+
+modalAddBtn.onclick=()=>addToCartWithTopping(item);
 
 modal.classList.add("show");
 }
@@ -571,6 +613,15 @@ modal.classList.remove("show");
 
 let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
 let filter="all";
+let selectedToppings=[];
+
+const toppingsData = [
+{nama:"Extra Keju",harga:5000},
+{nama:"Telur Tambah",harga:6000},
+{nama:"Sosis",harga:7000},
+{nama:"Extra Shot Kopi",harga:8000},
+{nama:"Whipped Cream",harga:4000}
+];
 
 const data=[
 {nama:"Nasi Goreng",harga:25000,kategori:"makanan",img:"https://source.unsplash.com/600x400/?friedrice",desc:"Nasi goreng spesial dengan ayam, telur, dan bumbu rahasia Dhito Cafe."},
@@ -581,6 +632,72 @@ const data=[
 
 {nama:"Paket Hemat",harga:45000,kategori:"promo",img:"https://source.unsplash.com/600x400/?foodcombo",desc:"Combo nasi + minuman favorit dengan harga lebih hemat."}
 ];
+
+function renderToppings(){
+let list=document.getElementById("toppingList");
+list.innerHTML="";
+
+toppingsData.forEach(t=>{
+list.innerHTML+=`
+<div class="topping-item"
+onclick="toggleTopping('${t.nama}')">
+${t.nama} (+Rp ${t.harga.toLocaleString()})
+</div>`;
+});
+}
+
+function toggleTopping(nama){
+let index=selectedToppings.findIndex(t=>t.nama===nama);
+let topping=toppingsData.find(t=>t.nama===nama);
+
+if(index>-1){
+selectedToppings.splice(index,1);
+}else{
+selectedToppings.push(topping);
+}
+
+updateActiveUI();
+updatePrice(data.find(d=>d.nama===modalTitle.innerText));
+}
+
+function updateActiveUI(){
+document.querySelectorAll(".topping-item").forEach(el=>{
+let nama=el.innerText.split(" (+")[0];
+if(selectedToppings.find(t=>t.nama===nama)){
+el.classList.add("active");
+}else{
+el.classList.remove("active");
+}
+});
+}
+
+function updatePrice(item){
+let total=item.harga;
+selectedToppings.forEach(t=>total+=t.harga);
+
+modalPrice.innerText="Total Rp "+total.toLocaleString();
+}
+
+function addToCartWithTopping(item){
+let toppingText=selectedToppings.map(t=>t.nama).join(", ");
+
+let finalName=item.nama;
+if(toppingText){
+finalName+=` (${toppingText})`;
+}
+
+let total=item.harga;
+selectedToppings.forEach(t=>total+=t.harga);
+
+if(!cart[finalName]){
+cart[finalName]={qty:0,harga:total};
+}
+
+cart[finalName].qty++;
+
+modal.classList.remove("show");
+renderCart();
+}
 
 function render(){
 menuEl.innerHTML="";
