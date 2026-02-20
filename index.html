@@ -3,15 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>QR Order Modern</title>
+<title>Premium QR Order</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="header">
-  <h1>🍽 QR Order</h1>
-  <p id="tableInfo"></p>
+<div class="hero">
+  <div>
+    <h1>DT Resto</h1>
+    <p id="tableInfo"></p>
+  </div>
 </div>
 
 <div class="menu-container" id="menuList"></div>
@@ -22,9 +24,19 @@
 
 <div class="cart-modal" id="cartModal">
   <div class="cart-content">
-    <h2>Keranjang</h2>
+    <div class="cart-header">
+      <h2>Keranjang</h2>
+      <span onclick="closeCart()">✕</span>
+    </div>
+
     <div id="cartItems"></div>
-    <h3>Total: Rp <span id="totalPrice">0</span></h3>
+
+    <div class="summary">
+      <p>Subtotal <span id="subtotal"></span></p>
+      <p>Pajak 10% <span id="tax"></span></p>
+      <p>Service 5% <span id="service"></span></p>
+      <h3>Total <span id="total"></span></h3>
+    </div>
 
     <button class="btn primary" onclick="checkout('kasir')">
       Bayar di Kasir
@@ -33,8 +45,6 @@
     <button class="btn secondary" onclick="checkout('online')">
       Bayar Online (Demo)
     </button>
-
-    <button class="btn close" onclick="closeCart()">Tutup</button>
   </div>
 </div>
 
