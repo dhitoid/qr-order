@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Order Modern</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>🍽 QR Order</h1>
+  <p id="tableInfo"></p>
+</div>
+
+<div class="menu-container" id="menuList"></div>
+
+<div class="cart-floating" onclick="openCart()">
+  🛒 <span id="cartCount">0</span>
+</div>
+
+<div class="cart-modal" id="cartModal">
+  <div class="cart-content">
+    <h2>Keranjang</h2>
+    <div id="cartItems"></div>
+    <h3>Total: Rp <span id="totalPrice">0</span></h3>
+
+    <button class="btn primary" onclick="checkout('kasir')">
+      Bayar di Kasir
+    </button>
+
+    <button class="btn secondary" onclick="checkout('online')">
+      Bayar Online (Demo)
+    </button>
+
+    <button class="btn close" onclick="closeCart()">Tutup</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
