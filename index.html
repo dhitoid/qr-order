@@ -34,6 +34,18 @@ overflow-x:hidden;
 padding-bottom:140px;
 }
 
+.menu-section{
+margin-bottom:40px;
+}
+
+.section-title{
+font-size:18px;
+font-weight:700;
+margin:0 20px 18px;
+opacity:.8;
+letter-spacing:.5px;
+}
+
 /* ================= DYNAMIC ISLAND 2026 ================= */
 .dynamic-island{
 position:fixed;
@@ -129,9 +141,17 @@ padding:0 20px;
 background:var(--card);
 backdrop-filter:blur(30px);
 border:1px solid rgba(255,255,255,0.08);
-border-radius:var(--radius);
-padding:16px;
-transition:all .5s cubic-bezier(.22,1,.36,1);
+border-radius:26px;
+padding:14px;
+transition:all .4s cubic-bezier(.22,1,.36,1);
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+}
+
+.card h4{
+font-size:15px;
+margin-bottom:6px;
 }
 
 .card:hover{
@@ -233,13 +253,33 @@ border-radius:20px;
 margin:0 auto 20px;
 }
 
+.sheet h3{
+font-size:18px;
+margin-bottom:10px;
+}
+
 .cart-item{
 display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:14px;
-padding-bottom:14px;
+padding:12px 0;
 border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+.cart-item-info{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+.cart-item-name{
+font-size:14px;
+font-weight:600;
+}
+
+.cart-item-price{
+font-size:12px;
+opacity:.6;
 }
 
 .checkout-btn{
@@ -1088,24 +1128,102 @@ updateCart();
 
 function updateCart(){
 let total=0;
+
 document.getElementById("cartItems").innerHTML=
 cart.map((i,idx)=>{
 total+=i.harga*i.qty;
-return `<div class="cart-item">
-<span>${i.nama}</span>
-<div class="qty-control">
-<button onclick="decrease(${idx})">−</button>
-<span>${i.qty}</span>
-<button onclick="increase(${idx})">+</button>
+
+return `
+<div class="cart-item">
+<div class="cart-item-info"
+onclick="editCartItem(${idx})">
+
+<span class="cart-item-name">${i.nama}</span>
+<span class="cart-item-price">
+Rp ${(i.harga*i.qty).toLocaleString()}
+</span>
+
 </div>
-</div>`;
+
+<div class="qty-control">
+<button onclick="event.stopPropagation();decrease(${idx})">−</button>
+<span>${i.qty}</span>
+<button onclick="event.stopPropagation();increase(${idx})">+</button>
+</div>
+</div>
+`;
 }).join("");
 
 document.getElementById("total").innerText="Total: Rp "+total.toLocaleString();
-cartCount.innerText=cart.reduce((a,b)=>a+b.qty,0);
 
-cartCount.classList.add("bounce");
-setTimeout(()=>cartCount.classList.remove("bounce"),300);
+cartCount.innerText=cart.reduce((a,b)=>a+b.qty,0);
+}
+
+function editCartItem(index){
+
+let item=cart[index];
+
+let baseName=item.nama.split(" (")[0];
+let base=data.find(d=>d.nama===baseName);
+
+selectedToppings=[];
+modalQty=item.qty;
+
+document.getElementById("modalQty").innerText=modalQty;
+
+modalImg.style.backgroundImage=`url('${base.img}')`;
+modalTitle.innerText=base.nama;
+modalDesc.innerText=base.desc;
+
+renderToppings();
+
+/* restore topping */
+let toppingText=item.nama.match(/\((.*?)\)/);
+if(toppingText){
+let toppingArr=toppingText[1].split(", ");
+toppingArr.forEach(t=>{
+let top=toppingsData.find(td=>td.nama===t);
+if(top) selectedToppings.push(top);
+});
+}
+
+updateActiveUI();
+updatePrice(base);
+
+modalAddBtn.innerText="Update Pesanan";
+
+modalAddBtn.onclick=()=>{
+updateCartItem(index,base);
+};
+
+modal.classList.add("show");
+}
+
+function updateCartItem(index,item){
+
+let toppingText=selectedToppings.map(t=>t.nama).join(", ");
+let finalName=item.nama;
+
+if(toppingText){
+finalName+=` (${toppingText})`;
+}
+
+let basePrice=item.harga;
+selectedToppings.forEach(t=>basePrice+=t.harga);
+
+cart[index]={
+nama:finalName,
+harga:basePrice,
+qty:modalQty
+};
+
+modal.classList.remove("show");
+modalAddBtn.innerText="Tambah ke Keranjang";
+
+saveCart();
+updateCart();
+
+notify("✏️ Pesanan diperbarui","success");
 }
 
 function increase(i){
