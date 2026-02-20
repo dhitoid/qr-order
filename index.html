@@ -244,6 +244,25 @@ box-shadow:0 10px 30px rgba(79,156,255,0.3);
 .checkout-btn:active{
 transform:scale(.97);
 }
+
+.input{
+width:100%;
+padding:14px;
+margin-bottom:12px;
+border-radius:18px;
+border:1px solid rgba(255,255,255,0.08);
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+color:#fff;
+font-size:14px;
+outline:none;
+transition:.3s;
+}
+
+.input:focus{
+border:1px solid var(--accent);
+box-shadow:0 0 0 2px var(--accent-soft);
+}
 </style>
 </head>
 <body>
@@ -265,13 +284,35 @@ transform:scale(.97);
 <div class="menu-grid" id="menu"></div>
 
 <div class="cart-sheet" id="cartSheet">
-<h3>Detail Pesanan</h3>
+<h3 style="margin-bottom:15px;">🛒 Detail Pesanan</h3>
+
 <div id="cartItems"></div>
-<div id="cartTotal" style="margin-top:10px;font-weight:bold;"></div>
-<button class="checkout-btn" onclick="checkout()">Bayar Sekarang</button>
+
+<div id="cartTotal" style="margin-top:15px;"></div>
+
+<hr style="margin:20px 0;border:0;border-top:1px solid rgba(255,255,255,0.08);">
+
+<h3 style="margin-bottom:15px;">👤 Data Pemesan</h3>
+
+<input class="input" id="custName" placeholder="Nama Lengkap">
+<input class="input" id="custPhone" placeholder="Nomor HP">
+<input class="input" id="custEmail" placeholder="Email">
+
+<select class="input" id="paymentMethod">
+<option value="">Metode Pembayaran</option>
+<option>Cash</option>
+<option>QRIS</option>
+<option>Transfer Bank</option>
+<option>Debit / Kredit</option>
+</select>
+
+<button class="checkout-btn" onclick="checkout()">Konfirmasi Pesanan</button>
 </div>
 
 <script>
+
+const cafeName = "☕ Dhito Cafe";
+const island = document.getElementById("islandText");
 
 const menuData=[
 {nama:"Nasi Goreng",harga:25000,kategori:"makanan",img:"https://source.unsplash.com/400x300/?friedrice"},
@@ -281,13 +322,19 @@ const menuData=[
 {nama:"Paket Hemat",harga:45000,kategori:"promo",img:"https://source.unsplash.com/400x300/?foodcombo"}
 ];
 
-let cart=JSON.parse(localStorage.getItem("cafe_cart")||"[]");
+let cart = JSON.parse(localStorage.getItem("cafe_cart")||"[]");
 let currentFilter="all";
+
+function showIslandNotification(text){
+island.innerText = text;
+setTimeout(()=> island.innerText = cafeName ,2000);
+}
 
 function renderMenu(){
 const menu=document.getElementById("menu");
 menu.innerHTML="";
 const filtered=currentFilter==="all"?menuData:menuData.filter(i=>i.kategori===currentFilter);
+
 filtered.forEach(item=>{
 menu.innerHTML+=`
 <div class="card">
@@ -308,14 +355,23 @@ renderMenu();
 }
 
 function addToCart(nama){
-const item=menuData.find(i=>i.nama===nama);
-cart.push(item);
+let existing = cart.find(i=>i.nama===nama);
+if(existing){
+existing.qty +=1;
+}else{
+const item = menuData.find(i=>i.nama===nama);
+cart.push({...item, qty:1});
+}
 saveCart();
-animateIsland();
+showIslandNotification("✔ "+nama+" ditambahkan");
 }
 
 function removeItem(index){
+if(cart[index].qty >1){
+cart[index].qty -=1;
+}else{
 cart.splice(index,1);
+}
 saveCart();
 }
 
@@ -325,27 +381,28 @@ updateCartUI();
 }
 
 function updateCartUI(){
-document.getElementById("islandText").innerText="🛒 "+cart.length+" Item";
 const container=document.getElementById("cartItems");
 container.innerHTML="";
 let total=0;
+
 cart.forEach((item,i)=>{
-total+=item.harga;
+let subtotal = item.harga * item.qty;
+total += subtotal;
+
 container.innerHTML+=`
 <div class="cart-item">
-<span>${item.nama}</span>
+<div>
+<strong>${item.nama}</strong><br>
+<span>${item.qty} x Rp ${item.harga.toLocaleString()}</span>
+</div>
 <div>
 <button onclick="removeItem(${i})">-</button>
 </div>
 </div>`;
 });
-document.getElementById("cartTotal").innerText="Total: Rp "+total.toLocaleString();
-}
 
-function animateIsland(){
-const island=document.getElementById("island");
-island.classList.add("expanded");
-setTimeout(()=>island.classList.remove("expanded"),600);
+document.getElementById("cartTotal").innerHTML =
+"<strong>Total: Rp "+total.toLocaleString()+"</strong>";
 }
 
 function toggleIsland(){
@@ -353,13 +410,36 @@ document.getElementById("cartSheet").classList.toggle("show");
 }
 
 function checkout(){
-alert("Order berhasil! Invoice: INV"+Date.now());
+const name=document.getElementById("custName").value;
+const phone=document.getElementById("custPhone").value;
+const email=document.getElementById("custEmail").value;
+const payment=document.getElementById("paymentMethod").value;
+
+if(!name || !phone || !email || !payment){
+showIslandNotification("⚠ Lengkapi data dulu");
+return;
+}
+
+if(cart.length===0){
+showIslandNotification("🛒 Keranjang kosong");
+return;
+}
+
+showIslandNotification("🎉 Pesanan Berhasil!");
+
 cart=[];
-saveCart();
+localStorage.removeItem("cafe_cart");
+updateCartUI();
 document.getElementById("cartSheet").classList.remove("show");
+
+document.getElementById("custName").value="";
+document.getElementById("custPhone").value="";
+document.getElementById("custEmail").value="";
+document.getElementById("paymentMethod").value="";
 }
 
 renderMenu();
+island.innerText = cafeName;
 
 </script>
 </body>
