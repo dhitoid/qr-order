@@ -506,6 +506,66 @@ color:white;
 border:1px solid #7ab8ff;
 }
 
+.modal-qty{
+display:flex;
+align-items:center;
+justify-content:center;
+gap:20px;
+margin-bottom:18px;
+}
+
+.modal-qty button{
+width:42px;
+height:42px;
+border:none;
+border-radius:50%;
+font-size:20px;
+font-weight:600;
+cursor:pointer;
+background:rgba(255,255,255,0.1);
+color:white;
+transition:.3s;
+}
+
+.modal-qty button:hover{
+background:linear-gradient(135deg,var(--accent),var(--accent2));
+}
+
+.modal-qty span{
+font-size:20px;
+font-weight:600;
+min-width:30px;
+text-align:center;
+}
+
+.qty-control{
+display:flex;
+align-items:center;
+gap:12px;
+}
+
+.qty-control button{
+width:34px;
+height:34px;
+border:none;
+border-radius:50%;
+background:rgba(255,255,255,0.1);
+color:white;
+font-size:18px;
+cursor:pointer;
+transition:.3s;
+}
+
+.qty-control button:hover{
+background:linear-gradient(135deg,var(--accent),var(--accent2));
+}
+
+.qty-control span{
+font-weight:600;
+min-width:20px;
+text-align:center;
+}
+
 </style>
 </head>
 <body>
@@ -570,7 +630,11 @@ border:1px solid #7ab8ff;
     <h4>Pilih Topping</h4>
     <div class="topping-list" id="toppingList"></div>
   </div>
-
+<div class="modal-qty">
+  <button onclick="decreaseModal()">−</button>
+  <span id="modalQty">1</span>
+  <button onclick="increaseModal()">+</button>
+</div>
   <div class="modal-price" id="modalPrice"></div>
   <button class="modal-add" id="modalAddBtn">Tambah ke Keranjang</button>
 </div>
@@ -592,6 +656,8 @@ const modalAddBtn=document.getElementById("modalAddBtn");
 function openMenuDetail(n){
 let item=data.find(d=>d.nama===n);
 selectedToppings=[];
+modalQty=1;
+document.getElementById("modalQty").innerText=modalQty;
 
 modalImg.style.backgroundImage=`url('${item.img}')`;
 modalTitle.innerText=item.nama;
@@ -614,6 +680,7 @@ modal.classList.remove("show");
 let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
 let filter="all";
 let selectedToppings=[];
+let modalQty = 1;
 
 const toppingsData = [
 {nama:"Extra Keju",harga:5000},
@@ -673,30 +740,56 @@ el.classList.remove("active");
 
 function updatePrice(item){
 let total=item.harga;
+
 selectedToppings.forEach(t=>total+=t.harga);
+
+total*=modalQty;
 
 modalPrice.innerText="Total Rp "+total.toLocaleString();
 }
 
 function addToCartWithTopping(item){
-let toppingText=selectedToppings.map(t=>t.nama).join(", ");
 
+let toppingText=selectedToppings.map(t=>t.nama).join(", ");
 let finalName=item.nama;
 if(toppingText){
 finalName+=` (${toppingText})`;
 }
 
-let total=item.harga;
-selectedToppings.forEach(t=>total+=t.harga);
+let basePrice=item.harga;
+selectedToppings.forEach(t=>basePrice+=t.harga);
 
-if(!cart[finalName]){
-cart[finalName]={qty:0,harga:total};
+let existing=cart.find(c=>c.nama===finalName);
+
+if(existing){
+existing.qty+=modalQty;
+}else{
+cart.push({
+nama:finalName,
+harga:basePrice,
+qty:modalQty
+});
 }
 
-cart[finalName].qty++;
+notify(`✅ ${finalName} (${modalQty}x)`,"success");
 
 modal.classList.remove("show");
-renderCart();
+saveCart();
+updateCart();
+}
+
+function increaseModal(){
+modalQty++;
+document.getElementById("modalQty").innerText=modalQty;
+updatePrice(data.find(d=>d.nama===modalTitle.innerText));
+}
+
+function decreaseModal(){
+if(modalQty>1){
+modalQty--;
+document.getElementById("modalQty").innerText=modalQty;
+updatePrice(data.find(d=>d.nama===modalTitle.innerText));
+}
 }
 
 function render(){
@@ -713,7 +806,7 @@ menuEl.innerHTML+=`
 <img src="${d.img}">
 <h4>${d.nama}</h4>
 <div class="price">Rp ${d.harga.toLocaleString()}</div>
-<button onclick="event.stopPropagation();add('${d.nama}')">Tambah</button>
+<button onclick="event.stopPropagation();openMenuDetail('${d.nama}')">Detail</button>
 </div>`;
 });
 }
