@@ -79,19 +79,23 @@ let selectedToppings=[];
 let modalQty = 1;
 let searchQuery="";
 let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
-/* ================= QRIS SIMULATION CLEAN ================= */
+/* ================= QRIS PROFESSIONAL ================= */
 
 let qrisInterval = null;
 let qrisTimeout = null;
 let currentOrderData = null;
+let qrisStatus = "idle"; // idle | waiting | paid | expired | cancelled
 
 function startQris(total){
+
+if(qrisStatus === "waiting") return;
+
+qrisStatus = "waiting";
 
 document.body.style.overflow="hidden";
 
 let orderNo = generateOrderNumber();
 
-/* simpan dulu data order sementara */
 currentOrderData = {
 id: orderNo,
 date: new Date().toLocaleString(),
@@ -102,13 +106,7 @@ tax: total * 0.10,
 total: total
 };
 
-/* generate QR */
-let qrData = `
-DHITOCAFE
-ORDER:${orderNo}
-TOTAL:${total}
-TIME:${Date.now()}
-`;
+let qrData = `DHITOCAFE|ORDER:${orderNo}|TOTAL:${total}|TIME:${Date.now()}`;
 
 let qrUrl =
 "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data="
@@ -120,29 +118,44 @@ document.getElementById("qrisTotal").innerText =
 
 document.getElementById("qrisModal").classList.add("show");
 
-notify("📱 Silakan scan QRIS","info");
+notify("📲 Menunggu pembayaran QRIS...","info");
 
-/* countdown */
-let timeLeft = 60;
-document.getElementById("qrisTimer").innerText = timeLeft;
+/* ===== COUNTDOWN FIX 60 DETIK REAL ===== */
+
+let endTime = Date.now() + 60000;
 
 qrisInterval = setInterval(()=>{
-timeLeft--;
-document.getElementById("qrisTimer").innerText = timeLeft;
 
-if(timeLeft <= 0){
-clearInterval(qrisInterval);
-cancelQris(true);
+let remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+
+document.getElementById("qrisTimer").innerText = remaining;
+
+if(remaining <= 0){
+expireQris();
 }
+
 },1000);
 
-/* simulasi pembayaran berhasil */
+/* ===== SIMULASI PEMBAYARAN (REALISTIC) ===== */
+/* hanya bisa sukses kalau masih waiting */
+
 qrisTimeout = setTimeout(()=>{
+
+if(qrisStatus === "waiting"){
 completeQrisPayment();
-},7000 + Math.random()*5000);
 }
 
+},8000 + Math.random()*7000);
+
+}
+
+/* ================= COMPLETE ================= */
+
 function completeQrisPayment(){
+
+if(qrisStatus !== "waiting") return;
+
+qrisStatus = "paid";
 
 clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
@@ -150,7 +163,7 @@ clearTimeout(qrisTimeout);
 document.getElementById("qrisModal").classList.remove("show");
 document.body.style.overflow="auto";
 
-/* simpan history */
+/* Simpan history */
 orderHistory.unshift(currentOrderData);
 localStorage.setItem("order_history",JSON.stringify(orderHistory));
 
@@ -162,15 +175,26 @@ renderHistory();
 
 checkoutProgress();
 
-notify("💳 QRIS berhasil dibayar","success");
+notify("💳 Pembayaran QRIS berhasil","success");
 
-/* reset cart */
+/* reset */
 cart=[];
 saveCart();
 updateCart();
+
+setTimeout(()=>{
+qrisStatus = "idle";
+},1500);
+
 }
 
-function cancelQris(expired=false){
+/* ================= EXPIRE ================= */
+
+function expireQris(){
+
+if(qrisStatus !== "waiting") return;
+
+qrisStatus = "expired";
 
 clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
@@ -178,16 +202,34 @@ clearTimeout(qrisTimeout);
 document.getElementById("qrisModal").classList.remove("show");
 document.body.style.overflow="auto";
 
-if(expired){
-notify("⏳ QRIS expired","warning");
-}else{
-notify("QRIS dibatalkan","info");
-}
+notify("⏳ QRIS kadaluarsa","warning");
+
+setTimeout(()=>{
+qrisStatus = "idle";
+},1500);
+
 }
 
-function checkoutSuccessAfterQR(){
-checkoutProgress();
-notify("💳 QRIS berhasil dibayar","success");
+/* ================= CANCEL ================= */
+
+function cancelQris(){
+
+if(qrisStatus !== "waiting") return;
+
+qrisStatus = "cancelled";
+
+clearInterval(qrisInterval);
+clearTimeout(qrisTimeout);
+
+document.getElementById("qrisModal").classList.remove("show");
+document.body.style.overflow="auto";
+
+notify("❌ Pembayaran dibatalkan","info");
+
+setTimeout(()=>{
+qrisStatus = "idle";
+},1500);
+
 }
 
 function downloadQris(){
