@@ -216,11 +216,11 @@ setTimeout(()=>{
 },300);
 
 setTimeout(()=>{
-  currentOrderData.paymentStatus="Sukses";
-  currentOrderData.orderStatus="Sedang Disiapkan";
   closeQrisModal();
   checkoutProgress();
   setTimeout(()=>{
+    currentOrderData.paymentStatus="Lunas";
+    currentOrderData.orderStatus="Sedang Disiapkan";
     finalizePayment();
   },2000);
 },1600);
@@ -1077,6 +1077,11 @@ notify("💵 Silakan bayar di kasir","info");
 
 return;
 }
+
+},900);
+}
+
+/* ================= INIT ================= */
 
 updateLoyalty();
 updateCart();
