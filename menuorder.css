@@ -467,6 +467,8 @@ transition:.6s cubic-bezier(.22,1,.36,1);
 }
 
 .menu-modal.show .menu-modal-content{
+border-radius:20px 20px 0 0;
+overflow:hidden;
 transform:translateY(0);
 }
 
@@ -889,10 +891,9 @@ cursor:pointer;
 }
 
 .modal-handle{
-width:40px;
+width:42px;
 height:4px;
-background:rgba(255,255,255,0.3);
+background:rgba(255,255,255,0.25);
 border-radius:10px;
-margin:10px auto;
-cursor:pointer;
+margin:10px auto 15px auto;
 }
