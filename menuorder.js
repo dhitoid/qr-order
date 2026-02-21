@@ -10,6 +10,31 @@ const modalDesc=document.getElementById("modalDesc");
 const modalPrice=document.getElementById("modalPrice");
 const modalAddBtn=document.getElementById("modalAddBtn");
 
+async function downloadInvoicePDF(){
+
+const { jsPDF } = window.jspdf;
+
+let invoice=document.getElementById("invoicePrintable");
+
+let canvas=await html2canvas(invoice,{
+scale:2,
+backgroundColor:null
+});
+
+let imgData=canvas.toDataURL("image/png");
+
+let pdf=new jsPDF("p","mm","a4");
+
+let imgWidth=190;
+let pageHeight=297;
+let imgHeight=canvas.height*imgWidth/canvas.width;
+
+pdf.addImage(imgData,"PNG",10,10,imgWidth,imgHeight);
+
+pdf.save("Invoice_DhitoCafe.pdf");
+
+}
+
 /* ================= AUTO FORMAT NO HP INDONESIA ================= */
 
 const phoneInput = document.getElementById("phoneInput");
@@ -507,6 +532,8 @@ let badgeClass = order.paymentStatus==="Lunas"
 ? "badge-success"
 : "badge-warning";
 
+let qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data="+encodeURIComponent(order.id);
+
 let itemsHTML=order.items.map(i=>
 `<div class="invoice-item">
 <span>${i.nama} (${i.qty}x)</span>
@@ -516,11 +543,15 @@ let itemsHTML=order.items.map(i=>
 
 document.getElementById("invoiceBody").innerHTML=`
 
+<div id="invoicePrintable">
+
 <div class="invoice-header">
 <div>
 <div class="invoice-id">${order.id}</div>
 <div style="font-size:12px;opacity:.6">${order.date}</div>
 </div>
+
+<img src="${qrUrl}" class="invoice-qr-small">
 </div>
 
 <div class="invoice-divider"></div>
@@ -556,6 +587,8 @@ Metode: ${order.paymentMethod}<br>
 ${order.paymentStatus}
 </span><br>
 Status: ${order.orderStatus}
+</div>
+
 </div>
 `;
 
