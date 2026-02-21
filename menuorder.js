@@ -79,7 +79,20 @@ let selectedToppings=[];
 let modalQty = 1;
 let searchQuery="";
 let paymentLock = false;
+let showAllHistory = false;
 let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
+let modalStartY=0;
+
+modal.addEventListener("touchstart",e=>{
+modalStartY=e.touches[0].clientY;
+});
+
+modal.addEventListener("touchmove",e=>{
+let currentY=e.touches[0].clientY;
+if(currentY-modalStartY>120){
+closeMenuModal();
+}
+});
 
 /* ================= QRIS PROFESSIONAL FIXED ================= */
 
@@ -778,6 +791,11 @@ setTimeout(()=>conf.remove(),800);
 }
 }
 
+function toggleHistoryView(){
+showAllHistory = !showAllHistory;
+renderHistory();
+}
+
 function renderHistory(){
 
 let container=document.getElementById("orderHistoryList");
@@ -787,7 +805,11 @@ container.innerHTML="<p style='opacity:.5;font-size:13px;'>Belum ada pesanan.</p
 return;
 }
 
-container.innerHTML=orderHistory.map(order=>{
+let displayData = showAllHistory 
+? orderHistory 
+: orderHistory.slice(0,3);
+
+container.innerHTML = displayData.map(order=>{
 
 let items=order.items.map(i=>
 `${i.nama} (${i.qty}x)`
@@ -814,7 +836,24 @@ Total: Rp ${order.total.toLocaleString()}
 
 }).join("");
 
+/* ===== BUTTON TOGGLE ===== */
+
+if(orderHistory.length > 3){
+container.innerHTML += `
+<div class="history-toggle">
+<button onclick="toggleHistoryView()">
+${showAllHistory ? "Lihat Lebih Sedikit" : "Lihat Semua"}
+</button>
+</div>
+`;
 }
+
+}
+
+function closeMenuModal(){
+modal.classList.remove("show");
+}
+
 
 function generateOrderNumber(){
 let now=new Date();
@@ -908,6 +947,7 @@ render();
 
 /* ================= EXPOSE GLOBAL FUNCTIONS ================= */
 
+window.toggleHistoryView = toggleHistoryView;
 window.openMenuDetail = openMenuDetail;
 window.toggleTopping = toggleTopping;
 window.increaseModal = increaseModal;
