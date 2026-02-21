@@ -144,46 +144,41 @@ qrisStatus="waiting";
 let modal=document.getElementById("qrisModal");
 let img=document.getElementById("qrisImage");
 let loading=document.getElementById("qrisLoading");
-let statusText=document.getElementById("qrisStatusText");
+let overlay=document.getElementById("qrisOverlayStatus");
 
-modal.classList.add("show");
-document.body.style.overflow="hidden";
-
-img.style.display="none";
-loading.style.display="block";
-statusText.className="qris-status waiting";
-statusText.innerText="Menunggu pembayaran...";
-
-let orderNo=generateOrderNumber();
-
-currentOrderData={
-id:orderNo,
-date:new Date().toLocaleString(),
-items:[...cart],
-total:total
-};
+overlay.innerText="Menghasilkan QR...";
+overlay.style.background="rgba(0,0,0,0.7)";
 
 let qrData=`DHITOCAFE|${orderNo}|${total}|${Date.now()}`;
 let qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data="+encodeURIComponent(qrData);
 
-setTimeout(()=>{
-if(qrisStatus!=="waiting") return;
+/* LOAD REAL IMAGE */
+
+img.onload=function(){
+  if(qrisStatus!=="waiting") return;
+
+  loading.style.display="none";
+  img.style.display="block";
+
+  overlay.innerText="Menunggu Pembayaran";
+};
+
+img.onerror=function(){
+  overlay.innerText="Gagal membuat QR";
+};
+
 img.src=qrUrl;
-img.style.display="block";
-loading.style.display="none";
-},1200);
 
 /* TIMER REAL 60 DETIK */
 
 let endTime=Date.now()+60000;
 
 qrisInterval=setInterval(()=>{
-let remaining=Math.max(0,Math.floor((endTime-Date.now())/1000));
-document.getElementById("qrisTimer").innerText=remaining;
-if(remaining<=0) expireQris();
-},1000);
+  let remaining=Math.max(0,Math.floor((endTime-Date.now())/1000));
+  document.getElementById("qrisTimer").innerText=remaining;
 
-ring.style.strokeDashoffset = circumference - (timeLeft/60)*circumference;
+  if(remaining<=0) expireQris();
+},1000);
 
 /* SIMULASI BAYAR */
 
