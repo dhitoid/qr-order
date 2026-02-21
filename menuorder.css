@@ -1006,3 +1006,43 @@ background:rgba(255,255,255,0.25);
 border-radius:10px;
 margin:10px auto 15px auto;
 }
+
+.success-animation{
+position:absolute;
+inset:0;
+display:none;
+align-items:center;
+justify-content:center;
+background:rgba(255,255,255,0.95);
+border-radius:20px;
+}
+
+.checkmark{
+width:90px;
+height:90px;
+border-radius:50%;
+background:#4CAF50;
+display:flex;
+align-items:center;
+justify-content:center;
+animation:pop .4s ease;
+}
+
+.checkmark::after{
+content:"✓";
+color:white;
+font-size:40px;
+font-weight:bold;
+animation:fadeIn .3s ease .2s forwards;
+opacity:0;
+}
+
+@keyframes pop{
+0%{transform:scale(0)}
+80%{transform:scale(1.1)}
+100%{transform:scale(1)}
+}
+
+@keyframes fadeIn{
+to{opacity:1}
+}
