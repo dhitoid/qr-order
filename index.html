@@ -184,12 +184,15 @@
 
     <div id="invoiceBody"></div>
 
-    <button class="btn-primary" onclick="closeInvoice()">
-      Tutup
-    </button>
+    <div class="invoice-actions">
+  <button class="btn-secondary" onclick="closeInvoice()">Tutup</button>
+  <button class="btn-primary" onclick="downloadInvoicePDF()">Download PDF</button>
+</div>
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="menuorder.js"></script>
 </body>
 </html>
