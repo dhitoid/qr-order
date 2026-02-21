@@ -146,11 +146,11 @@ let overlay=document.getElementById("qrisOverlayStatus");
 let timerText=document.getElementById("qrisTimer");
 let successAnim=document.getElementById("successAnim");
 
-/* ===== TAMPILKAN MODAL ===== */
+/* SHOW MODAL */
 modal.classList.add("show");
 document.body.style.overflow="hidden";
 
-/* ===== RESET UI ===== */
+/* RESET UI */
 img.style.display="none";
 img.style.opacity="1";
 loading.style.display="flex";
@@ -159,31 +159,24 @@ successAnim.style.display="none";
 overlay.innerText="Menghasilkan QR...";
 overlay.style.background="rgba(0,0,0,0.7)";
 
-timerText.innerText="60";
+timerText.innerText="180";
 
-/* ===== GENERATE QR ===== */
-
+/* GENERATE QR */
 let orderNo = currentOrderData.id;
 let qrData=`DHITOCAFE|${orderNo}|${total}|${Date.now()}`;
 let qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data="+encodeURIComponent(qrData);
 
 img.onload=function(){
 if(qrisStatus!=="waiting") return;
-
 loading.style.display="none";
 img.style.display="block";
 overlay.innerText="Menunggu Pembayaran";
 };
 
-img.onerror=function(){
-overlay.innerText="Gagal membuat QR";
-};
-
 img.src=qrUrl;
 
-/* ===== TIMER ===== */
-
-let endTime=Date.now()+60000;
+/* TIMER 3 MENIT */
+let endTime=Date.now()+180000;
 
 qrisInterval=setInterval(()=>{
 let remaining=Math.max(0,Math.floor((endTime-Date.now())/1000));
@@ -192,8 +185,7 @@ timerText.innerText=remaining;
 if(remaining<=0) expireQris();
 },1000);
 
-/* ===== SIMULASI BAYAR ===== */
-
+/* FAKE SUCCESS (8 DETIK) */
 qrisTimeout=setTimeout(()=>{
 if(qrisStatus==="waiting"){
 completeQrisPayment();
@@ -225,8 +217,6 @@ setTimeout(()=>{
 successAnim.style.display="flex";
 },300);
 
-/* TUNGGU 1.5 DETIK BARU LANJUT */
-
 setTimeout(()=>{
 
 currentOrderData.paymentStatus="Lunas";
@@ -234,12 +224,16 @@ currentOrderData.orderStatus="Sedang Disiapkan";
 
 closeQrisModal();
 
-/* Baru jalankan island animation */
+/* ISLAND ANIMATION */
 checkoutProgress();
 
-/* Baru finalize */
+/* FINALIZE */
 setTimeout(()=>{
 finalizePayment();
+
+/* AUTO BUKA INVOICE TERBARU */
+openInvoice(0);
+
 },2500);
 
 },1500);
@@ -509,8 +503,9 @@ function openInvoice(index){
 
 let order=orderHistory[index];
 
-let statusPaymentClass =
-order.paymentStatus==="Lunas" ? "status-lunas" : "status-belum";
+let badgeClass = order.paymentStatus==="Lunas"
+? "badge-success"
+: "badge-warning";
 
 let itemsHTML=order.items.map(i=>
 `<div class="invoice-item">
@@ -521,30 +516,46 @@ let itemsHTML=order.items.map(i=>
 
 document.getElementById("invoiceBody").innerHTML=`
 
-<div class="invoice-section">
-<div><strong>ID:</strong> ${order.id}</div>
-<div>${order.date}</div>
+<div class="invoice-header">
+<div>
+<div class="invoice-id">${order.id}</div>
+<div style="font-size:12px;opacity:.6">${order.date}</div>
+</div>
 </div>
 
-<div class="invoice-section">
+<div class="invoice-divider"></div>
+
 ${itemsHTML}
+
+<div class="invoice-divider"></div>
+
+<div class="invoice-item">
+<span>Subtotal</span>
+<span>Rp ${order.subtotal.toLocaleString()}</span>
 </div>
 
-<div class="invoice-section">
-<div>Subtotal: Rp ${order.subtotal.toLocaleString()}</div>
-<div>Service: Rp ${order.service.toLocaleString()}</div>
-<div>Pajak: Rp ${order.tax.toLocaleString()}</div>
-<div class="invoice-total">
-Total: Rp ${order.total.toLocaleString()}
-</div>
+<div class="invoice-item">
+<span>Service</span>
+<span>Rp ${order.service.toLocaleString()}</span>
 </div>
 
-<div class="invoice-section">
-<div>Metode: ${order.paymentMethod}</div>
-<div class="invoice-status ${statusPaymentClass}">
+<div class="invoice-item">
+<span>Pajak</span>
+<span>Rp ${order.tax.toLocaleString()}</span>
+</div>
+
+<div class="invoice-divider"></div>
+
+<div class="invoice-total-big">
+Rp ${order.total.toLocaleString()}
+</div>
+
+<div style="margin-top:12px;">
+Metode: ${order.paymentMethod}<br>
+<span class="invoice-badge ${badgeClass}">
 ${order.paymentStatus}
-</div>
-<div>${order.orderStatus}</div>
+</span><br>
+Status: ${order.orderStatus}
 </div>
 `;
 
