@@ -1133,3 +1133,27 @@ color:#4CAF50;
 background:rgba(255,152,0,0.2);
 color:#ff9800;
 }
+
+.invoice-actions{
+display:flex;
+gap:10px;
+margin-top:18px;
+}
+
+.invoice-actions button{
+flex:1;
+}
+
+.invoice-qr-small{
+width:60px;
+height:60px;
+border-radius:12px;
+background:white;
+padding:6px;
+}
+
+#invoicePrintable{
+background:linear-gradient(145deg,#111827,#1f2937);
+padding:10px;
+border-radius:20px;
+}
