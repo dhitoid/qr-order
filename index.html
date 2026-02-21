@@ -104,25 +104,34 @@
 </div>
 
 <div class="menu-modal" id="menuModal">
-  <div class="modal-handle" onclick="closeMenuModal()"></div>
   <div class="menu-modal-content">
-    <div class="menu-modal-img" id="modalImg"></div>
-    <div class="menu-modal-body">
-  <h2 id="modalTitle"></h2>
-  <p id="modalDesc"></p>
 
-  <div class="topping-section">
-    <h4>Pilih Topping</h4>
-    <div class="topping-list" id="toppingList"></div>
-  </div>
-<div class="modal-qty">
-  <button onclick="decreaseModal()">−</button>
-  <span id="modalQty">1</span>
-  <button onclick="increaseModal()">+</button>
-</div>
-  <div class="modal-price" id="modalPrice"></div>
-  <button class="modal-add" id="modalAddBtn">Tambah ke Keranjang</button>
-</div>
+    <div class="modal-handle" onclick="closeMenuModal()"></div>
+
+    <div class="menu-modal-img" id="modalImg"></div>
+
+    <div class="menu-modal-body">
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+
+      <div class="topping-section">
+        <h4>Pilih Topping</h4>
+        <div class="topping-list" id="toppingList"></div>
+      </div>
+
+      <div class="modal-qty">
+        <button onclick="decreaseModal()">−</button>
+        <span id="modalQty">1</span>
+        <button onclick="increaseModal()">+</button>
+      </div>
+
+      <div class="modal-price" id="modalPrice"></div>
+
+      <button class="modal-add" id="modalAddBtn">
+        Tambah ke Keranjang
+      </button>
+
+    </div>
   </div>
 </div>
 
