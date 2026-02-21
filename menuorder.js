@@ -9,8 +9,6 @@ const modalTitle=document.getElementById("modalTitle");
 const modalDesc=document.getElementById("modalDesc");
 const modalPrice=document.getElementById("modalPrice");
 const modalAddBtn=document.getElementById("modalAddBtn");
-const ring = document.getElementById("progressRing");
-const circumference = 339;
 
 /* ================= AUTO FORMAT NO HP INDONESIA ================= */
 
