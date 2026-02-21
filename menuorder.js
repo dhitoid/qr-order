@@ -79,73 +79,69 @@ let selectedToppings=[];
 let modalQty = 1;
 let searchQuery="";
 let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
-/* ================= QRIS PROFESSIONAL ================= */
 
-let qrisInterval = null;
-let qrisTimeout = null;
-let currentOrderData = null;
-let qrisStatus = "idle"; // idle | waiting | paid | expired | cancelled
+/* ================= QRIS PROFESSIONAL FIXED ================= */
+
+let qrisInterval=null;
+let qrisTimeout=null;
+let currentOrderData=null;
+let qrisStatus="idle";
 
 function startQris(total){
 
-if(qrisStatus === "waiting") return;
+if(qrisStatus==="waiting") return;
 
-qrisStatus = "waiting";
+qrisStatus="waiting";
 
+let modal=document.getElementById("qrisModal");
+let img=document.getElementById("qrisImage");
+let loading=document.getElementById("qrisLoading");
+let statusText=document.getElementById("qrisStatusText");
+
+modal.classList.add("show");
 document.body.style.overflow="hidden";
 
-let orderNo = generateOrderNumber();
+img.style.display="none";
+loading.style.display="block";
+statusText.className="qris-status waiting";
+statusText.innerText="Menunggu pembayaran...";
 
-currentOrderData = {
-id: orderNo,
-date: new Date().toLocaleString(),
-items: [...cart],
-subtotal: total / 1.15,
-service: total * 0.05,
-tax: total * 0.10,
-total: total
+let orderNo=generateOrderNumber();
+
+currentOrderData={
+id:orderNo,
+date:new Date().toLocaleString(),
+items:[...cart],
+total:total
 };
 
-let qrData = `DHITOCAFE|ORDER:${orderNo}|TOTAL:${total}|TIME:${Date.now()}`;
+let qrData=`DHITOCAFE|${orderNo}|${total}|${Date.now()}`;
+let qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data="+encodeURIComponent(qrData);
 
-let qrUrl =
-"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data="
-+ encodeURIComponent(qrData);
+setTimeout(()=>{
+if(qrisStatus!=="waiting") return;
+img.src=qrUrl;
+img.style.display="block";
+loading.style.display="none";
+},1200);
 
-document.getElementById("qrisImage").src = qrUrl;
-document.getElementById("qrisTotal").innerText =
-"Total: Rp " + total.toLocaleString();
+/* TIMER REAL 60 DETIK */
 
-document.getElementById("qrisModal").classList.add("show");
+let endTime=Date.now()+60000;
 
-notify("📲 Menunggu pembayaran QRIS...","info");
-
-/* ===== COUNTDOWN FIX 60 DETIK REAL ===== */
-
-let endTime = Date.now() + 60000;
-
-qrisInterval = setInterval(()=>{
-
-let remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
-
-document.getElementById("qrisTimer").innerText = remaining;
-
-if(remaining <= 0){
-expireQris();
-}
-
+qrisInterval=setInterval(()=>{
+let remaining=Math.max(0,Math.floor((endTime-Date.now())/1000));
+document.getElementById("qrisTimer").innerText=remaining;
+if(remaining<=0) expireQris();
 },1000);
 
-/* ===== SIMULASI PEMBAYARAN (REALISTIC) ===== */
-/* hanya bisa sukses kalau masih waiting */
+/* SIMULASI BAYAR */
 
-qrisTimeout = setTimeout(()=>{
-
-if(qrisStatus === "waiting"){
+qrisTimeout=setTimeout(()=>{
+if(qrisStatus==="waiting"){
 completeQrisPayment();
 }
-
-},8000 + Math.random()*7000);
+},9000+Math.random()*6000);
 
 }
 
@@ -153,38 +149,21 @@ completeQrisPayment();
 
 function completeQrisPayment(){
 
-if(qrisStatus !== "waiting") return;
+if(qrisStatus!=="waiting") return;
 
-qrisStatus = "paid";
+qrisStatus="paid";
 
 clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
 
-document.getElementById("qrisModal").classList.remove("show");
-document.body.style.overflow="auto";
-
-/* Simpan history */
-orderHistory.unshift(currentOrderData);
-localStorage.setItem("order_history",JSON.stringify(orderHistory));
-
-points += 20;
-localStorage.setItem("dhito_points",points);
-
-updateLoyalty();
-renderHistory();
-
-checkoutProgress();
-
-notify("💳 Pembayaran QRIS berhasil","success");
-
-/* reset */
-cart=[];
-saveCart();
-updateCart();
+let statusText=document.getElementById("qrisStatusText");
+statusText.className="qris-status success";
+statusText.innerText="Pembayaran diterima ✓";
 
 setTimeout(()=>{
-qrisStatus = "idle";
-},1500);
+closeQrisModal();
+finalizeOrder();
+},1200);
 
 }
 
@@ -192,20 +171,19 @@ qrisStatus = "idle";
 
 function expireQris(){
 
-if(qrisStatus !== "waiting") return;
+if(qrisStatus!=="waiting") return;
 
-qrisStatus = "expired";
+qrisStatus="expired";
 
 clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
 
-document.getElementById("qrisModal").classList.remove("show");
-document.body.style.overflow="auto";
-
-notify("⏳ QRIS kadaluarsa","warning");
+let statusText=document.getElementById("qrisStatusText");
+statusText.className="qris-status expired";
+statusText.innerText="QR kadaluarsa";
 
 setTimeout(()=>{
-qrisStatus = "idle";
+closeQrisModal();
 },1500);
 
 }
@@ -214,21 +192,38 @@ qrisStatus = "idle";
 
 function cancelQris(){
 
-if(qrisStatus !== "waiting") return;
+if(qrisStatus!=="waiting") return;
 
-qrisStatus = "cancelled";
+qrisStatus="cancelled";
 
 clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
 
+closeQrisModal();
+
+}
+
+/* ================= CLOSE ================= */
+
+function closeQrisModal(){
 document.getElementById("qrisModal").classList.remove("show");
 document.body.style.overflow="auto";
+qrisStatus="idle";
+}
 
-notify("❌ Pembayaran dibatalkan","info");
+/* ================= FINAL ORDER ================= */
 
-setTimeout(()=>{
-qrisStatus = "idle";
-},1500);
+function finalizeOrder(){
+
+orderHistory.unshift(currentOrderData);
+localStorage.setItem("order_history",JSON.stringify(orderHistory));
+
+cart=[];
+saveCart();
+updateCart();
+renderHistory();
+
+notify("💳 Pembayaran berhasil","success");
 
 }
 
