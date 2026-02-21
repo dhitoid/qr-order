@@ -143,49 +143,62 @@ let modal=document.getElementById("qrisModal");
 let img=document.getElementById("qrisImage");
 let loading=document.getElementById("qrisLoading");
 let overlay=document.getElementById("qrisOverlayStatus");
+let timerText=document.getElementById("qrisTimer");
+let successAnim=document.getElementById("successAnim");
+
+/* ===== TAMPILKAN MODAL ===== */
+modal.classList.add("show");
+document.body.style.overflow="hidden";
+
+/* ===== RESET UI ===== */
+img.style.display="none";
+img.style.opacity="1";
+loading.style.display="flex";
+successAnim.style.display="none";
 
 overlay.innerText="Menghasilkan QR...";
 overlay.style.background="rgba(0,0,0,0.7)";
+
+timerText.innerText="60";
+
+/* ===== GENERATE QR ===== */
 
 let orderNo = currentOrderData.id;
 let qrData=`DHITOCAFE|${orderNo}|${total}|${Date.now()}`;
 let qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data="+encodeURIComponent(qrData);
 
-/* LOAD REAL IMAGE */
-
 img.onload=function(){
-  if(qrisStatus!=="waiting") return;
+if(qrisStatus!=="waiting") return;
 
-  loading.style.display="none";
-  img.style.display="block";
-
-  overlay.innerText="Menunggu Pembayaran";
+loading.style.display="none";
+img.style.display="block";
+overlay.innerText="Menunggu Pembayaran";
 };
 
 img.onerror=function(){
-  overlay.innerText="Gagal membuat QR";
+overlay.innerText="Gagal membuat QR";
 };
 
 img.src=qrUrl;
 
-/* TIMER REAL 60 DETIK */
+/* ===== TIMER ===== */
 
 let endTime=Date.now()+60000;
 
 qrisInterval=setInterval(()=>{
-  let remaining=Math.max(0,Math.floor((endTime-Date.now())/1000));
-  document.getElementById("qrisTimer").innerText=remaining;
+let remaining=Math.max(0,Math.floor((endTime-Date.now())/1000));
+timerText.innerText=remaining;
 
-  if(remaining<=0) expireQris();
+if(remaining<=0) expireQris();
 },1000);
 
-/* SIMULASI BAYAR */
+/* ===== SIMULASI BAYAR ===== */
 
 qrisTimeout=setTimeout(()=>{
 if(qrisStatus==="waiting"){
 completeQrisPayment();
 }
-},9000+Math.random()*6000);
+},8000);
 
 }
 
@@ -206,24 +219,30 @@ let img=document.getElementById("qrisImage");
 
 overlay.innerText="Pembayaran diterima";
 overlay.style.background="rgba(76,175,80,0.9)";
-
-/* Fade QR sedikit */
 img.style.opacity="0.3";
 
-/* Show success anim */
 setTimeout(()=>{
-  successAnim.style.display="flex";
+successAnim.style.display="flex";
 },300);
 
+/* TUNGGU 1.5 DETIK BARU LANJUT */
+
 setTimeout(()=>{
-  closeQrisModal();
-  checkoutProgress();
-  setTimeout(()=>{
-    currentOrderData.paymentStatus="Lunas";
-    currentOrderData.orderStatus="Sedang Disiapkan";
-    finalizePayment();
-  },2000);
-},1600);
+
+currentOrderData.paymentStatus="Lunas";
+currentOrderData.orderStatus="Sedang Disiapkan";
+
+closeQrisModal();
+
+/* Baru jalankan island animation */
+checkoutProgress();
+
+/* Baru finalize */
+setTimeout(()=>{
+finalizePayment();
+},2500);
+
+},1500);
 
 }
 
@@ -1052,14 +1071,14 @@ setTimeout(()=>{
 /* ===== QRIS FLOW ===== */
 if(method==="QRIS"){
 
-closeSheet(); // baru close setelah animasi
+closeSheet();
 startQris(grand);
 
 island.classList.remove("expand","payment");
 island.innerHTML="☕ Dhito Cafe";
 islandForceShow = false;
 
-return;
+return; // jangan finalize di sini
 }
 
 /* ===== BAYAR DI KASIR ===== */
