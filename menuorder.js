@@ -207,16 +207,20 @@ clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
 
 let statusText=document.getElementById("qrisStatusText");
+let successAnim=document.getElementById("successAnim");
+
 statusText.className="qris-status success";
-statusText.innerText="Pembayaran diterima ✓";
+statusText.innerText="Pembayaran diterima";
+
+successAnim.style.display="flex";
 
 setTimeout(()=>{
-closeQrisModal();
-checkoutProgress();
-setTimeout(()=>{
-finalizePayment();
-},2500);
-},1200);
+  closeQrisModal();
+  checkoutProgress();
+  setTimeout(()=>{
+    finalizePayment();
+  },2000);
+},1500);
 
 }
 
