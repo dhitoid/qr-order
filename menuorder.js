@@ -509,6 +509,9 @@ function openInvoice(index){
 
 let order=orderHistory[index];
 
+let statusPaymentClass =
+order.paymentStatus==="Lunas" ? "status-lunas" : "status-belum";
+
 let itemsHTML=order.items.map(i=>
 `<div class="invoice-item">
 <span>${i.nama} (${i.qty}x)</span>
@@ -517,9 +520,10 @@ let itemsHTML=order.items.map(i=>
 ).join("");
 
 document.getElementById("invoiceBody").innerHTML=`
+
 <div class="invoice-section">
 <div><strong>ID:</strong> ${order.id}</div>
-<div><strong>Tanggal:</strong> ${order.date}</div>
+<div>${order.date}</div>
 </div>
 
 <div class="invoice-section">
@@ -530,14 +534,17 @@ ${itemsHTML}
 <div>Subtotal: Rp ${order.subtotal.toLocaleString()}</div>
 <div>Service: Rp ${order.service.toLocaleString()}</div>
 <div>Pajak: Rp ${order.tax.toLocaleString()}</div>
-<hr>
-<div><strong>Total: Rp ${order.total.toLocaleString()}</strong></div>
+<div class="invoice-total">
+Total: Rp ${order.total.toLocaleString()}
+</div>
 </div>
 
 <div class="invoice-section">
-<div><strong>Metode:</strong> ${order.paymentMethod}</div>
-<div><strong>Status Pembayaran:</strong> ${order.paymentStatus}</div>
-<div><strong>Status Pesanan:</strong> ${order.orderStatus}</div>
+<div>Metode: ${order.paymentMethod}</div>
+<div class="invoice-status ${statusPaymentClass}">
+${order.paymentStatus}
+</div>
+<div>${order.orderStatus}</div>
 </div>
 `;
 
