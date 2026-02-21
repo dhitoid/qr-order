@@ -764,27 +764,173 @@ border:1px solid #ff453a;
 box-shadow:0 0 20px rgba(255,69,58,0.3);
 }
 
+/* ===== MODAL BACKDROP ===== */
 .qris-modal{
 position:fixed;
 inset:0;
-display:none;   
+display:none;
 align-items:center;
 justify-content:center;
-background:rgba(0,0,0,0.6);
-backdrop-filter:blur(30px);
+background:rgba(10,20,40,0.6);
+backdrop-filter:blur(25px);
 z-index:5000;
+animation:fadeIn .3s ease;
 }
 
 .qris-modal.show{
-display:flex;       
+display:flex;
 }
 
-.download-qris{
-width:100%;
+/* ===== CONTENT ===== */
+.qris-content{
+width:90%;
+max-width:420px;
+padding:24px;
+border-radius:28px;
+background:rgba(20,30,50,0.85);
+backdrop-filter:blur(40px);
+box-shadow:0 25px 60px rgba(0,0,0,.5);
+color:white;
+position:relative;
+animation:scaleUp .35s cubic-bezier(.4,0,.2,1);
+}
+
+/* Drag Handle */
+.modal-handle{
+width:50px;
+height:5px;
+border-radius:10px;
+background:rgba(255,255,255,0.3);
+margin:0 auto 18px;
+}
+
+/* Header */
+.qris-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.qris-header h3{
+font-size:16px;
+font-weight:600;
+}
+
+/* Badge */
+.qris-badge{
+padding:6px 12px;
+border-radius:50px;
+font-size:11px;
+font-weight:600;
+}
+
+.qris-badge.waiting{
+background:rgba(255,193,7,0.2);
+color:#ffd54f;
+}
+
+.qris-badge.success{
+background:rgba(76,175,80,0.2);
+color:#4CAF50;
+}
+
+.qris-badge.expired{
+background:rgba(255,82,82,0.2);
+color:#ff5252;
+}
+
+/* QR Wrapper */
+.qris-qr-wrapper{
+position:relative;
+display:flex;
+justify-content:center;
+align-items:center;
+margin:20px 0;
+}
+
+#qrisImage{
+width:180px;
+height:180px;
+border-radius:20px;
+display:none;
+background:white;
+padding:10px;
+}
+
+/* Progress Ring */
+.qris-ring{
+position:absolute;
+width:120px;
+height:120px;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.qris-ring svg{
+position:absolute;
+width:120px;
+height:120px;
+transform:rotate(-90deg);
+}
+
+.qris-ring circle{
+fill:none;
+stroke-width:6;
+stroke:rgba(255,255,255,0.15);
+}
+
+#progressRing{
+stroke:#4f9cff;
+stroke-dasharray:339;
+stroke-dashoffset:0;
+transition:stroke-dashoffset 1s linear;
+}
+
+.ring-time{
+position:relative;
+text-align:center;
+}
+
+.ring-time span{
+font-size:20px;
+font-weight:700;
+}
+
+.ring-time small{
+font-size:10px;
+opacity:0.7;
+}
+
+/* Total */
+.qris-total{
+text-align:center;
+font-size:18px;
+font-weight:700;
+margin-top:10px;
+}
+
+/* Status */
+.qris-status{
+text-align:center;
+font-size:13px;
+opacity:.8;
+margin-top:8px;
+}
+
+/* Buttons */
+.qris-buttons{
+margin-top:20px;
+display:flex;
+gap:10px;
+}
+
+.btn-primary{
+flex:1;
 padding:14px;
 border:none;
-border-radius:20px;
-margin-bottom:10px;
+border-radius:18px;
 background:linear-gradient(135deg,#4f9cff,#7ab8ff);
 color:white;
 font-weight:600;
@@ -792,40 +938,32 @@ cursor:pointer;
 transition:.3s;
 }
 
-.download-qris:hover{
+.btn-primary:hover{
 transform:scale(1.03);
 box-shadow:0 10px 25px rgba(79,156,255,0.4);
 }
 
-.qris-loading{
-text-align:center;
-padding:20px;
+.btn-secondary{
+flex:1;
+padding:14px;
+border:none;
+border-radius:18px;
+background:rgba(255,255,255,0.1);
+color:white;
+font-weight:600;
+cursor:pointer;
 }
 
-.spinner{
-width:40px;
-height:40px;
-border:4px solid rgba(255,255,255,0.2);
-border-top:4px solid #fff;
-border-radius:50%;
-margin:auto;
-animation:spin 0.8s linear infinite;
+/* Animations */
+@keyframes fadeIn{
+from{opacity:0}
+to{opacity:1}
 }
 
-@keyframes spin{
-to{ transform:rotate(360deg); }
+@keyframes scaleUp{
+from{transform:scale(.9);opacity:0}
+to{transform:scale(1);opacity:1}
 }
-
-.qris-status{
-margin-top:12px;
-font-size:13px;
-opacity:0.8;
-text-align:center;
-}
-
-.qris-status.success{ color:#4CAF50; }
-.qris-status.expired{ color:#ff5252; }
-.qris-status.waiting{ color:#ffd54f; }
 
 /* ===== CHECKOUT LOADING BUTTON ===== */
 
