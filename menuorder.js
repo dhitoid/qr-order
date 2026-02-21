@@ -9,6 +9,8 @@ const modalTitle=document.getElementById("modalTitle");
 const modalDesc=document.getElementById("modalDesc");
 const modalPrice=document.getElementById("modalPrice");
 const modalAddBtn=document.getElementById("modalAddBtn");
+const ring = document.getElementById("progressRing");
+const circumference = 339;
 
 /* ================= AUTO FORMAT NO HP INDONESIA ================= */
 
@@ -180,6 +182,8 @@ let remaining=Math.max(0,Math.floor((endTime-Date.now())/1000));
 document.getElementById("qrisTimer").innerText=remaining;
 if(remaining<=0) expireQris();
 },1000);
+
+ring.style.strokeDashoffset = circumference - (timeLeft/60)*circumference;
 
 /* SIMULASI BAYAR */
 
