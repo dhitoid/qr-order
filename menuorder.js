@@ -191,6 +191,7 @@ closeQrisModal();
 },1500);
 
 paymentLock = false;
+setCheckoutLoading(false);
 }
 
 /* ================= CANCEL ================= */
@@ -206,6 +207,7 @@ clearTimeout(qrisTimeout);
 closeQrisModal();
 
 paymentLock = false;
+setCheckoutLoading(false);
 }
 
 /* ================= CLOSE ================= */
@@ -235,6 +237,7 @@ updateCart();
 notify("🎉 Order berhasil! "+currentOrderData.id,"success");
 
 paymentLock = false;
+setCheckoutLoading(false);
 }
 
 function downloadQris(){
@@ -497,6 +500,14 @@ island.innerHTML=`
 <div class="island-status" id="payStatus">
 Menghubungi gateway...
 </div>
+
+<div class="bank-verify">
+<div class="bank-dot"></div>
+<div class="bank-dot"></div>
+<div class="bank-dot"></div>
+<span id="bankText">Verifikasi bank...</span>
+</div>
+
 <div class="island-progress">
 <div class="island-progress-bar" id="progressBar"></div>
 </div>
@@ -504,34 +515,41 @@ Menghubungi gateway...
 
 let bar=document.getElementById("progressBar");
 let status=document.getElementById("payStatus");
+let bankText=document.getElementById("bankText");
 
 let steps=[
-{w:20, text:"Menghubungi gateway..."},
-{w:45, text:"Verifikasi keamanan 🔐"},
-{w:70, text:"Menunggu konfirmasi bank..."},
-{w:90, text:"Menyelesaikan transaksi..."},
-{w:100, text:"Pembayaran berhasil ✅"}
+{w:25, text:"Menghubungi gateway...", bank:"Mengirim request ke bank..."},
+{w:50, text:"Verifikasi keamanan 🔐", bank:"Validasi OTP & Signature..."},
+{w:75, text:"Menunggu konfirmasi bank...", bank:"Menunggu respon bank..."},
+{w:95, text:"Menyelesaikan transaksi...", bank:"Settlement transaksi..."},
+{w:100, text:"Pembayaran berhasil ✅", bank:"Dana diterima ✔"}
 ];
 
 let i=0;
 
 let interval=setInterval(()=>{
+
 bar.style.width=steps[i].w+"%";
 status.innerText=steps[i].text;
+bankText.innerText=steps[i].bank;
+
 i++;
 
 if(i>=steps.length){
 clearInterval(interval);
 
 setTimeout(()=>{
+
 island.classList.remove("payment");
 island.classList.add("success");
 
-let total=document.getElementById("total").innerText;
-
 island.innerHTML=`
 🎉 Pembayaran Sukses
-<div class="island-status">${total}</div>
+<div class="island-status">
+${currentOrderData.total
+? "Rp "+currentOrderData.total.toLocaleString()
+: ""}
+</div>
 `;
 
 confettiEffect();
@@ -541,10 +559,10 @@ island.classList.remove("expand","success");
 island.innerHTML="☕ Dhito Cafe";
 },2500);
 
-},700 + Math.random()*600);
+},900);
 }
 
-},700 + Math.random()*600);
+},800);
 }
 
 function add(n){
@@ -815,6 +833,20 @@ finalizePayment();
 },3000);
 }
 
+function setCheckoutLoading(state){
+
+let btn=document.querySelector(".checkout-btn");
+
+if(!btn) return;
+
+if(state){
+btn.classList.add("loading");
+btn.innerText="Memproses...";
+}else{
+btn.classList.remove("loading");
+btn.innerText="Checkout";
+}
+}
 
 function checkout(){
 if(paymentLock) return;
@@ -833,6 +865,7 @@ return;
 }
 
 paymentLock = true;
+setCheckoutLoading(true);
 
 /* HITUNG TOTAL */
 let subtotal=0;
