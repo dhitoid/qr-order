@@ -587,11 +587,29 @@ Rp ${order.total.toLocaleString()}
 </div>
 
 <div style="margin-top:12px;">
-Metode: ${order.paymentMethod}<br>
+
+<div>
+<strong>Metode:</strong> ${order.paymentMethod}
+</div>
+
+<div style="margin-top:6px;">
+<strong>Status Pembayaran:</strong>
 <span class="invoice-badge ${badgeClass}">
 ${order.paymentStatus}
-</span><br>
-Status: ${order.orderStatus}
+</span>
+</div>
+
+<div style="margin-top:6px;">
+<strong>Status Pesanan:</strong>
+<span class="invoice-badge ${
+order.orderStatus==="Selesai" ? "badge-success" :
+order.orderStatus==="Diproses" ? "badge-warning" :
+"badge-warning"
+}">
+${order.orderStatus}
+</span>
+</div>
+
 </div>
 
 </div>
@@ -1192,4 +1210,15 @@ window.checkout = checkout;
 window.startQris = startQris;
 window.cancelQris = cancelQris;
 window.downloadQris = downloadQris;
+
+window.addEventListener("storage", function(e){
+
+if(e.key==="order_history"){
+
+orderHistory = JSON.parse(localStorage.getItem("order_history")||"[]");
+
+renderHistory();
+
+}
+});
 });
