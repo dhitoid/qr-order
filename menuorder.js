@@ -82,6 +82,48 @@ let paymentLock = false;
 let showAllHistory = false;
 let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
 let modalStartY=0;
+let lastScroll = 0;
+let islandHidden = false;
+
+window.addEventListener("scroll", ()=>{
+
+let currentScroll = window.scrollY;
+let delta = currentScroll - lastScroll;
+
+/* Jangan ganggu saat expand / payment */
+if(island.classList.contains("expand")){
+lastScroll = currentScroll;
+return;
+}
+
+/* ===== SCROLL TURUN ===== */
+if(delta > 5 && currentScroll > 80){
+
+island.style.transform = "translate(-50%,-80px)";
+island.style.opacity = "0";
+islandHidden = true;
+
+}
+
+/* ===== SCROLL NAIK ===== */
+if(delta < -5){
+
+island.style.transform = "translate(-50%,0)";
+island.style.opacity = "1";
+islandHidden = false;
+
+}
+
+/* ===== SHRINK MODE ===== */
+if(currentScroll > 40 && !islandHidden){
+island.classList.add("mini");
+}else{
+island.classList.remove("mini");
+}
+
+lastScroll = currentScroll;
+
+});
 
 modal.addEventListener("touchstart",e=>{
 modalStartY=e.touches[0].clientY;
