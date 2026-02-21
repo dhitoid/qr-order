@@ -65,8 +65,14 @@ box-shadow:
 0 8px 40px rgba(0,0,0,0.6),
 0 0 30px rgba(79,156,255,0.25);
 
-transition:all .6s cubic-bezier(.22,1,.36,1);
+transition:all .35s cubic-bezier(.4,0,.2,1);
 z-index:9999;
+}
+
+.dynamic-island.mini{
+padding:6px 16px;
+font-size:13px;
+backdrop-filter:blur(18px);
 }
 
 .dynamic-island.expand{
