@@ -146,7 +146,6 @@
 
     <div class="qris-total" id="qrisTotal"></div>
 
-    <!-- QR BOX -->
     <div class="qris-box">
 
       <div class="qris-loading" id="qrisLoading">
@@ -165,17 +164,29 @@
 
     </div>
 
-    <!-- Timer -->
     <div class="qris-timer">
       Berlaku <span id="qrisTimer">60</span> detik
     </div>
 
-    <!-- Buttons -->
     <div class="qris-buttons">
       <button class="btn-secondary" onclick="cancelQris()">Batal</button>
       <button class="btn-primary" onclick="downloadQris()">Unduh QR</button>
     </div>
 
+  </div>
+</div>
+
+<div class="invoice-modal" id="invoiceModal">
+  <div class="invoice-content">
+    <div class="modal-handle" onclick="closeInvoice()"></div>
+
+    <h3>Invoice Pesanan</h3>
+
+    <div id="invoiceBody"></div>
+
+    <button class="btn-primary" onclick="closeInvoice()">
+      Tutup
+    </button>
   </div>
 </div>
 
