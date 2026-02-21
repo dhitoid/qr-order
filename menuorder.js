@@ -78,6 +78,7 @@ let filter="all";
 let selectedToppings=[];
 let modalQty = 1;
 let searchQuery="";
+let paymentLock = false;
 let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
 
 /* ================= QRIS PROFESSIONAL FIXED ================= */
@@ -162,7 +163,10 @@ statusText.innerText="Pembayaran diterima ✓";
 
 setTimeout(()=>{
 closeQrisModal();
-finalizeOrder();
+checkoutProgress();
+setTimeout(()=>{
+finalizePayment();
+},2500);
 },1200);
 
 }
@@ -186,6 +190,7 @@ setTimeout(()=>{
 closeQrisModal();
 },1500);
 
+paymentLock = false;
 }
 
 /* ================= CANCEL ================= */
@@ -198,9 +203,9 @@ qrisStatus="cancelled";
 
 clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
-
 closeQrisModal();
 
+paymentLock = false;
 }
 
 /* ================= CLOSE ================= */
@@ -213,18 +218,23 @@ qrisStatus="idle";
 
 /* ================= FINAL ORDER ================= */
 
-function finalizeOrder(){
-
+function finalizePayment(){
 orderHistory.unshift(currentOrderData);
 localStorage.setItem("order_history",JSON.stringify(orderHistory));
+
+points+=20;
+localStorage.setItem("dhito_points",points);
+
+updateLoyalty();
+renderHistory();
 
 cart=[];
 saveCart();
 updateCart();
-renderHistory();
 
-notify("💳 Pembayaran berhasil","success");
+notify("🎉 Order berhasil! "+currentOrderData.id,"success");
 
+paymentLock = false;
 }
 
 function downloadQris(){
@@ -789,24 +799,26 @@ Total: Rp ${order.total.toLocaleString()}
 }
 
 function generateOrderNumber(){
-
 let now=new Date();
-
 let date=
 String(now.getDate()).padStart(2,'0')+
 String(now.getMonth()+1).padStart(2,'0')+
 String(now.getFullYear()).slice(-2);
-
 let random=Math.floor(1000+Math.random()*9000);
-
 return "#ORD-"+date+"-"+random;
 }
 
+function completePaymentDirect(){
+checkoutProgress();
+setTimeout(()=>{
+finalizePayment();
+},3000);
+}
+
+
 function checkout(){
+if(paymentLock) return;
 
-document.getElementById("qrisModal").classList.remove("show");
-
-/* VALIDASI */
 let inputs=document.querySelectorAll(".input");
 for(let i of inputs){
 if(!i.value){
@@ -820,6 +832,8 @@ notify("Keranjang kosong","danger");
 return;
 }
 
+paymentLock = true;
+
 /* HITUNG TOTAL */
 let subtotal=0;
 cart.forEach(i=>{
@@ -832,19 +846,9 @@ let grand=subtotal+service+tax;
 
 let method=document.querySelector("select").value;
 
-/* ===== QRIS ===== */
-if(method==="QRIS"){
-closeSheet();
-startQris(grand);
-return;
-}
-
-/* ===== NON QRIS ===== */
-
-let orderNo=generateOrderNumber();
-
-let orderData={
-id:orderNo,
+/* SIMPAN TEMP DATA */
+currentOrderData={
+id:generateOrderNumber(),
 date:new Date().toLocaleString(),
 items:[...cart],
 subtotal,
@@ -853,24 +857,15 @@ tax,
 total:grand
 };
 
-orderHistory.unshift(orderData);
-localStorage.setItem("order_history",JSON.stringify(orderHistory));
-
-points+=20;
-localStorage.setItem("dhito_points",points);
-
-updateLoyalty();
-renderHistory();
-
+if(method==="QRIS"){
 closeSheet();
-checkoutProgress();
+startQris(grand);
+return;
+}
 
-notify("🎉 Order berhasil! "+orderNo,"success");
-
-/* reset */
-cart=[];
-saveCart();
-updateCart();
+/* NON QRIS */
+closeSheet();
+completePaymentDirect();
 }
 
 updateLoyalty();
