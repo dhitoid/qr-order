@@ -685,6 +685,72 @@ border:1px solid var(--accent);
 box-shadow:0 0 20px rgba(79,156,255,0.3);
 }
 
+.checkout-summary{
+margin-top:20px;
+padding:16px;
+border-radius:22px;
+background:rgba(255,255,255,0.05);
+border:1px solid rgba(255,255,255,0.08);
+backdrop-filter:blur(20px);
+}
+
+.summary-row{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+margin-bottom:8px;
+opacity:.8;
+}
+
+.summary-divider{
+height:1px;
+background:rgba(255,255,255,0.1);
+margin:10px 0;
+}
+
+.total-row{
+font-weight:700;
+font-size:15px;
+opacity:1;
+}
+
+.order-history-section{
+margin:40px 20px;
+}
+
+.history-card{
+background:rgba(255,255,255,0.05);
+border:1px solid rgba(255,255,255,0.08);
+border-radius:22px;
+padding:16px;
+margin-bottom:16px;
+backdrop-filter:blur(20px);
+}
+
+.history-header{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+margin-bottom:8px;
+opacity:.7;
+}
+
+.history-id{
+font-weight:600;
+color:#9ecbff;
+}
+
+.history-items{
+font-size:13px;
+margin-bottom:8px;
+opacity:.8;
+}
+
+.history-total{
+font-weight:700;
+font-size:14px;
+}
+
 </style>
 </head>
 <body>
@@ -730,6 +796,10 @@ box-shadow:0 0 20px rgba(79,156,255,0.3);
     <div class="loyalty-fill" id="loyaltyFill"></div>
   </div>
 </div>
+<div class="order-history-section">
+  <h3 class="section-title">🧾 Riwayat Pesanan</h3>
+  <div id="orderHistoryList"></div>
+</div>
 <div class="floating-cart" onclick="openSheet()">
 🛒
 <div class="cart-count" id="cartCount">0</div>
@@ -740,6 +810,27 @@ box-shadow:0 0 20px rgba(79,156,255,0.3);
 
 <h3>Detail Pesanan</h3>
 <div id="cartItems"></div>
+<div class="checkout-summary">
+  <div class="summary-row">
+    <span>Subtotal</span>
+    <span id="subtotal"></span>
+  </div>
+  <div class="summary-row">
+    <span>Service (5%)</span>
+    <span id="service"></span>
+  </div>
+  <div class="summary-row">
+    <span>Pajak (10%)</span>
+    <span id="tax"></span>
+  </div>
+
+  <div class="summary-divider"></div>
+
+  <div class="summary-row total-row">
+    <span>Total</span>
+    <span id="grandTotal"></span>
+  </div>
+</div>
 <h4 id="total"></h4>
 
 <hr style="margin:15px 0;border-color:rgba(255,255,255,0.1)">
@@ -820,6 +911,7 @@ let filter="all";
 let selectedToppings=[];
 let modalQty = 1;
 let searchQuery="";
+let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
 
 document.getElementById("searchInput")
 .addEventListener("input",(e)=>{
@@ -1127,12 +1219,11 @@ updateCart();
 }
 
 function updateCart(){
-let total=0;
+let subtotal=0;
 
 document.getElementById("cartItems").innerHTML=
 cart.map((i,idx)=>{
-total+=i.harga*i.qty;
-
+subtotal+=i.harga*i.qty;
 return `
 <div class="cart-item">
 <div class="cart-item-info"
@@ -1154,10 +1245,16 @@ Rp ${(i.harga*i.qty).toLocaleString()}
 `;
 }).join("");
 
-document.getElementById("total").innerText="Total: Rp "+total.toLocaleString();
+let service=subtotal*0.05;
+let tax=subtotal*0.10;
+let grand=subtotal+service+tax;
+
+document.getElementById("subtotal").innerText="Rp "+subtotal.toLocaleString();
+document.getElementById("service").innerText="Rp "+service.toLocaleString();
+document.getElementById("tax").innerText="Rp "+tax.toLocaleString();
+document.getElementById("grandTotal").innerText="Rp "+grand.toLocaleString();
 
 cartCount.innerText=cart.reduce((a,b)=>a+b.qty,0);
-}
 
 function editCartItem(index){
 
@@ -1316,7 +1413,61 @@ setTimeout(()=>conf.remove(),800);
 }
 }
 
+function renderHistory(){
+
+let container=document.getElementById("orderHistoryList");
+
+if(orderHistory.length===0){
+container.innerHTML="<p style='opacity:.5;font-size:13px;'>Belum ada pesanan.</p>";
+return;
+}
+
+container.innerHTML=orderHistory.map(order=>{
+
+let items=order.items.map(i=>
+`${i.nama} (${i.qty}x)`
+).join("<br>");
+
+return `
+<div class="history-card">
+
+<div class="history-header">
+<span class="history-id">${order.id}</span>
+<span>${order.date}</span>
+</div>
+
+<div class="history-items">
+${items}
+</div>
+
+<div class="history-total">
+Total: Rp ${order.total.toLocaleString()}
+</div>
+
+</div>
+`;
+
+}).join("");
+
+}
+
+function generateOrderNumber(){
+
+let now=new Date();
+
+let date=
+String(now.getDate()).padStart(2,'0')+
+String(now.getMonth()+1).padStart(2,'0')+
+String(now.getFullYear()).slice(-2);
+
+let random=Math.floor(1000+Math.random()*9000);
+
+return "#ORD-"+date+"-"+random;
+}
+
 function checkout(){
+
+/* ================= VALIDASI ================= */
 let inputs=document.querySelectorAll(".input");
 for(let i of inputs){
 if(!i.value){
@@ -1325,23 +1476,62 @@ return;
 }
 }
 
+if(cart.length===0){
+notify("Keranjang kosong","error");
+return;
+}
+
+/* ================= HITUNG TOTAL ================= */
+let subtotal=0;
+cart.forEach(i=>{
+subtotal+=i.harga*i.qty;
+});
+
+let service=subtotal*0.05;
+let tax=subtotal*0.10;
+let grand=subtotal+service+tax;
+
+/* ================= ORDER NUMBER ================= */
+let orderNo=generateOrderNumber();
+
+/* ================= SIMPAN HISTORY ================= */
+let orderData={
+id:orderNo,
+date:new Date().toLocaleString(),
+items:[...cart],
+subtotal,
+service,
+tax,
+total:grand
+};
+
+orderHistory.unshift(orderData);
+localStorage.setItem("order_history",JSON.stringify(orderHistory));
+
+/* ================= LOYALTY ================= */
 points+=20;
 localStorage.setItem("dhito_points",points);
 updateLoyalty();
 
+/* ================= UI EFFECT ================= */
 closeSheet();
 checkoutProgress();
 confettiEffect();
 
+notify("🎉 Order berhasil! "+orderNo,"success");
+
+/* ================= RESET CART ================= */
 cart=[];
 saveCart();
 updateCart();
+renderHistory();
 }
 
 
 
 updateLoyalty();
 updateCart();
+renderHistory();
 render();
 </script>
 </body>
