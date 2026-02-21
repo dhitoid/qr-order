@@ -872,3 +872,27 @@ animation:blink 1.2s infinite;
 0%,80%,100%{opacity:.2;}
 40%{opacity:1;}
 }
+
+.history-toggle{
+text-align:center;
+margin-top:12px;
+}
+
+.history-toggle button{
+background:transparent;
+border:1px solid rgba(255,255,255,0.2);
+padding:8px 16px;
+border-radius:20px;
+font-size:12px;
+color:white;
+cursor:pointer;
+}
+
+.modal-handle{
+width:40px;
+height:4px;
+background:rgba(255,255,255,0.3);
+border-radius:10px;
+margin:10px auto;
+cursor:pointer;
+}
