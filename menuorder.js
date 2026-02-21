@@ -201,13 +201,20 @@ qrisStatus="paid";
 clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
 
-let statusText=document.getElementById("qrisStatusText");
+let overlay=document.getElementById("qrisOverlayStatus");
 let successAnim=document.getElementById("successAnim");
+let img=document.getElementById("qrisImage");
 
-statusText.className="qris-status success";
-statusText.innerText="Pembayaran diterima";
+overlay.innerText="Pembayaran diterima";
+overlay.style.background="rgba(76,175,80,0.9)";
 
-successAnim.style.display="flex";
+/* Fade QR sedikit */
+img.style.opacity="0.3";
+
+/* Show success anim */
+setTimeout(()=>{
+  successAnim.style.display="flex";
+},300);
 
 setTimeout(()=>{
   closeQrisModal();
@@ -215,7 +222,7 @@ setTimeout(()=>{
   setTimeout(()=>{
     finalizePayment();
   },2000);
-},1500);
+},1600);
 
 }
 
@@ -230,9 +237,9 @@ qrisStatus="expired";
 clearInterval(qrisInterval);
 clearTimeout(qrisTimeout);
 
-let statusText=document.getElementById("qrisStatusText");
-statusText.className="qris-status expired";
-statusText.innerText="QR kadaluarsa";
+let overlay=document.getElementById("qrisOverlayStatus");
+overlay.innerText="QR Kadaluarsa";
+overlay.style.background="rgba(255,82,82,0.9)";
 
 setTimeout(()=>{
 closeQrisModal();
