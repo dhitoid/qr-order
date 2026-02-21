@@ -841,4 +841,23 @@ updateCart();
 renderHistory();
 render();
 
+/* ================= EXPOSE GLOBAL FUNCTIONS ================= */
+
+window.openMenuDetail = openMenuDetail;
+window.toggleTopping = toggleTopping;
+window.increaseModal = increaseModal;
+window.decreaseModal = decreaseModal;
+window.filterMenu = filterMenu;
+window.selectCategory = selectCategory;
+window.toggleDropdown = toggleDropdown;
+window.add = add;
+window.increase = increase;
+window.decrease = decrease;
+window.editCartItem = editCartItem;
+window.openSheet = openSheet;
+window.closeSheet = closeSheet;
+window.checkout = checkout;
+window.startQris = startQris;
+window.cancelQris = cancelQris;
+window.downloadQris = downloadQris;
 });
