@@ -126,26 +126,30 @@
 </div>
 
 <div class="qris-modal" id="qrisModal">
-  <div class="qris-box">
-    <div class="qris-header">
-      <h3>Scan QRIS</h3>
-      <span id="qrisTimer">60</span>
-    </div>
+<div class="qris-content">
 
-    <div class="qris-code">
-      <img id="qrisImage" />
-    </div>
-
-    <div class="qris-total" id="qrisTotal"></div>
-
-    <button class="download-qris" onclick="downloadQris()">
-      📥 Unduh QR Code
-    </button>
-
-    <button class="cancel-qris" onclick="cancelQris()">
-      Batalkan
-    </button>
+  <div class="qris-loading" id="qrisLoading">
+    <div class="spinner"></div>
+    <p>Menghasilkan QRIS...</p>
   </div>
+
+  <img id="qrisImage" style="display:none;" />
+
+  <div class="qris-status" id="qrisStatusText">
+    Menunggu pembayaran...
+  </div>
+
+  <div class="qris-total" id="qrisTotal"></div>
+
+  <div class="qris-timer">
+    Berlaku <span id="qrisTimer">60</span> detik
+  </div>
+
+  <div class="qris-buttons">
+    <button onclick="cancelQris()">Batal</button>
+    <button onclick="downloadQris()">Unduh QR</button>
+  </div>
+
 </div>
 
 <script src="menuorder.js"></script>
