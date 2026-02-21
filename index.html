@@ -759,6 +759,30 @@ font-weight:700;
 font-size:14px;
 }
 
+/* Format helper */
+.input.invalid{
+border:1px solid #ff453a;
+box-shadow:0 0 20px rgba(255,69,58,0.3);
+}
+
+.download-qris{
+width:100%;
+padding:14px;
+border:none;
+border-radius:20px;
+margin-bottom:10px;
+background:linear-gradient(135deg,#4f9cff,#7ab8ff);
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:.3s;
+}
+
+.download-qris:hover{
+transform:scale(1.03);
+box-shadow:0 10px 25px rgba(79,156,255,0.4);
+}
+
 </style>
 </head>
 <body>
@@ -845,7 +869,7 @@ font-size:14px;
 
 <h3>Pembayaran</h3>
 <input class="input" placeholder="Nama">
-<input class="input" placeholder="No HP">
+<input class="input" id="phoneInput" placeholder="No HP (08xxxx)">
 <select class="input">
 <option>Metode Pembayaran</option>
 <option>Cash</option>
@@ -878,6 +902,29 @@ font-size:14px;
   </div>
 </div>
 
+<div class="qris-modal" id="qrisModal">
+  <div class="qris-box">
+    <div class="qris-header">
+      <h3>Scan QRIS</h3>
+      <span id="qrisTimer">60</span>
+    </div>
+
+    <div class="qris-code">
+      <img id="qrisImage" />
+    </div>
+
+    <div class="qris-total" id="qrisTotal"></div>
+
+    <button class="download-qris" onclick="downloadQris()">
+      📥 Unduh QR Code
+    </button>
+
+    <button class="cancel-qris" onclick="cancelQris()">
+      Batalkan
+    </button>
+  </div>
+</div>
+
 <script>
 const island=document.getElementById("island");
 const menuEl=document.getElementById("menu");
@@ -889,6 +936,45 @@ const modalTitle=document.getElementById("modalTitle");
 const modalDesc=document.getElementById("modalDesc");
 const modalPrice=document.getElementById("modalPrice");
 const modalAddBtn=document.getElementById("modalAddBtn");
+
+/* ================= AUTO FORMAT NO HP INDONESIA ================= */
+
+const phoneInput = document.getElementById("phoneInput");
+
+if(phoneInput){
+phoneInput.addEventListener("input", function(e){
+
+let value = e.target.value.replace(/\D/g,'');
+
+/* ubah 08 -> 628 */
+if(value.startsWith("0")){
+value = "62" + value.substring(1);
+}
+
+/* max 13-14 digit */
+value = value.substring(0,14);
+
+let formatted = "";
+
+if(value.length > 0){
+formatted = "+" + value.substring(0,2);
+}
+
+if(value.length > 2){
+formatted += " " + value.substring(2,5);
+}
+
+if(value.length > 5){
+formatted += "-" + value.substring(5,9);
+}
+
+if(value.length > 9){
+formatted += "-" + value.substring(9,13);
+}
+
+e.target.value = formatted;
+});
+}
 
 function openMenuDetail(n){
 let item=data.find(d=>d.nama===n);
@@ -920,6 +1006,84 @@ let selectedToppings=[];
 let modalQty = 1;
 let searchQuery="";
 let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
+/* ================= QRIS SIMULATION ================= */
+
+let qrisInterval;
+let qrisTime = 60;
+
+function startQris(total){
+
+let orderId = generateOrderNumber();
+
+/* Generate QR Dynamic */
+let qrData = `
+DHITOCAFE
+ORDER:${orderId}
+TOTAL:${total}
+TIME:${Date.now()}
+`;
+
+let qrUrl = 
+"https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" 
++ encodeURIComponent(qrData);
+
+document.getElementById("qrisImage").src = qrUrl;
+
+document.getElementById("qrisTotal").innerText =
+"Total: Rp " + total.toLocaleString();
+
+document.getElementById("qrisModal").classList.add("show");
+
+qrisTime = 60;
+document.getElementById("qrisTimer").innerText = qrisTime;
+
+qrisInterval = setInterval(()=>{
+qrisTime--;
+document.getElementById("qrisTimer").innerText = qrisTime;
+
+if(qrisTime <= 0){
+clearInterval(qrisInterval);
+cancelQris();
+notify("QRIS Expired","warning");
+}
+},1000);
+
+/* Simulasi sukses */
+setTimeout(()=>{
+clearInterval(qrisInterval);
+document.getElementById("qrisModal").classList.remove("show");
+checkoutSuccessAfterQR();
+},5000 + Math.random()*10000);
+}
+
+function cancelQris(){
+clearInterval(qrisInterval);
+document.getElementById("qrisModal").classList.remove("show");
+}
+
+function checkoutSuccessAfterQR(){
+checkoutProgress();
+notify("💳 QRIS berhasil dibayar","success");
+}
+
+function downloadQris(){
+
+let img = document.getElementById("qrisImage");
+
+if(!img.src){
+notify("QR belum siap","warning");
+return;
+}
+
+let link = document.createElement("a");
+link.href = img.src;
+link.download = "QRIS_DhitoCafe.png";
+document.body.appendChild(link);
+link.click();
+document.body.removeChild(link);
+
+notify("📥 QR berhasil diunduh","success");
+}
 
 document.getElementById("searchInput")
 .addEventListener("input",(e)=>{
@@ -1502,6 +1666,13 @@ subtotal+=i.harga*i.qty;
 let service=subtotal*0.05;
 let tax=subtotal*0.10;
 let grand=subtotal+service+tax;
+let method = document.querySelector("select").value;
+
+if(method === "QRIS"){
+closeSheet();
+startQris(grand);
+return;
+}
 
 /* ================= ORDER NUMBER ================= */
 let orderNo=generateOrderNumber();
