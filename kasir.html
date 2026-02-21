@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dhito Cafe - Sistem Kasir</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+
+body{
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
+padding:20px;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
+.header h2{
+font-size:20px;
+}
+
+.filter{
+display:flex;
+gap:10px;
+margin-bottom:20px;
+}
+
+.filter button{
+padding:8px 14px;
+border:none;
+border-radius:20px;
+background:rgba(255,255,255,0.1);
+color:white;
+cursor:pointer;
+}
+
+.filter button.active{
+background:#4CAF50;
+}
+
+.orders{
+display:grid;
+gap:15px;
+}
+
+.order-card{
+background:rgba(255,255,255,0.05);
+padding:16px;
+border-radius:18px;
+backdrop-filter:blur(10px);
+}
+
+.order-header{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+opacity:.8;
+margin-bottom:8px;
+}
+
+.order-total{
+font-weight:700;
+margin-top:8px;
+}
+
+.badge{
+display:inline-block;
+padding:4px 10px;
+border-radius:20px;
+font-size:12px;
+margin-top:6px;
+}
+
+.waiting{background:#f59e0b33;color:#fbbf24}
+.process{background:#3b82f633;color:#60a5fa}
+.done{background:#10b98133;color:#34d399}
+.unpaid{background:#ef444433;color:#f87171}
+.paid{background:#22c55e33;color:#4ade80}
+
+.actions{
+margin-top:10px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+.actions button{
+padding:6px 10px;
+border:none;
+border-radius:12px;
+cursor:pointer;
+font-size:12px;
+}
+
+.btn-primary{background:#4CAF50;color:white}
+.btn-warning{background:#f59e0b;color:black}
+.btn-danger{background:#ef4444;color:white}
+.btn-info{background:#3b82f6;color:white}
+
+.empty{
+opacity:.5;
+text-align:center;
+margin-top:50px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="header">
+<h2>☕ Dhito Cafe - Kasir</h2>
+<div id="totalOrders"></div>
+</div>
+
+<div class="filter">
+<button onclick="setFilter('ALL')" class="active">Semua</button>
+<button onclick="setFilter('QRIS')">QRIS</button>
+<button onclick="setFilter('KASIR')">Kasir</button>
+</div>
+
+<div class="orders" id="orders"></div>
+
+<script>
+
+let filter="ALL";
+
+function setFilter(f){
+filter=f;
+
+document.querySelectorAll(".filter button")
+.forEach(b=>b.classList.remove("active"));
+
+event.target.classList.add("active");
+
+renderOrders();
+}
+
+function getOrders(){
+return JSON.parse(localStorage.getItem("order_history")||"[]");
+}
+
+function saveOrders(data){
+localStorage.setItem("order_history",JSON.stringify(data));
+}
+
+function updateStatus(index,status){
+let orders=getOrders();
+orders[index].orderStatus=status;
+saveOrders(orders);
+renderOrders();
+}
+
+function markPaid(index){
+let orders=getOrders();
+orders[index].paymentStatus="Lunas";
+orders[index].orderStatus="Diproses";
+saveOrders(orders);
+renderOrders();
+}
+
+function deleteOrder(index){
+let orders=getOrders();
+orders.splice(index,1);
+saveOrders(orders);
+renderOrders();
+}
+
+function renderOrders(){
+
+let container=document.getElementById("orders");
+let orders=getOrders();
+
+if(filter!=="ALL"){
+orders=orders.filter(o=>o.paymentMethod===filter);
+}
+
+document.getElementById("totalOrders").innerText=
+"Total: "+orders.length+" order";
+
+if(orders.length===0){
+container.innerHTML="<div class='empty'>Belum ada order</div>";
+return;
+}
+
+container.innerHTML=orders.map((order,i)=>{
+
+let items=order.items.map(x=>
+`${x.nama} (${x.qty}x)`
+).join("<br>");
+
+let paymentBadge=order.paymentStatus==="Lunas"
+? "paid"
+: "unpaid";
+
+let statusClass="waiting";
+if(order.orderStatus==="Diproses") statusClass="process";
+if(order.orderStatus==="Selesai") statusClass="done";
+
+return `
+<div class="order-card">
+
+<div class="order-header">
+<span>${order.id}</span>
+<span>${order.date}</span>
+</div>
+
+<div style="font-size:13px;opacity:.8;margin-bottom:6px;">
+<strong>${order.customerName || "-"}</strong><br>
+${order.customerPhone || "-"}
+</div>
+
+<div style="font-size:13px;">
+${items}
+</div>
+
+<div class="order-total">
+Rp ${order.total.toLocaleString()}
+</div>
+
+<div class="badge ${paymentBadge}">
+${order.paymentStatus}
+</div>
+
+<div class="badge ${statusClass}">
+${order.orderStatus}
+</div>
+
+<div class="actions">
+
+<button class="btn-info"
+onclick="updateStatus(${i},'Diproses')">
+Proses
+</button>
+
+<button class="btn-primary"
+onclick="updateStatus(${i},'Selesai')">
+Selesai
+</button>
+
+${order.paymentMethod==="KASIR" && order.paymentStatus!=="Lunas"
+? `<button class="btn-warning"
+onclick="markPaid(${i})">
+Tandai Lunas
+</button>` : ""}
+
+<button class="btn-danger"
+onclick="deleteOrder(${i})">
+Hapus
+</button>
+
+</div>
+
+</div>
+`;
+
+}).join("");
+}
+
+renderOrders();
+
+/* AUTO REFRESH */
+setInterval(renderOrders,2000);
+
+</script>
+
+</body>
+</html>
