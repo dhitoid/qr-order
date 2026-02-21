@@ -151,24 +151,37 @@ function saveOrders(data){
 localStorage.setItem("order_history",JSON.stringify(data));
 }
 
-function updateStatus(index,status){
+function updateStatusById(id,status){
+
 let orders=getOrders();
-orders[index].orderStatus=status;
+
+let order=orders.find(o=>o.id===id);
+if(!order) return;
+
+order.orderStatus=status;
+
 saveOrders(orders);
 renderOrders();
 }
 
-function markPaid(index){
+function markPaidById(id){
+
 let orders=getOrders();
-orders[index].paymentStatus="Lunas";
-orders[index].orderStatus="Diproses";
+let order=orders.find(o=>o.id===id);
+if(!order) return;
+
+order.paymentStatus="Lunas";
+order.orderStatus="Diproses";
+
 saveOrders(orders);
 renderOrders();
 }
 
-function deleteOrder(index){
+function deleteOrderById(id){
+
 let orders=getOrders();
-orders.splice(index,1);
+orders=orders.filter(o=>o.id!==id);
+
 saveOrders(orders);
 renderOrders();
 }
@@ -236,23 +249,23 @@ ${order.orderStatus}
 <div class="actions">
 
 <button class="btn-info"
-onclick="updateStatus(${i},'Diproses')">
+onclick="updateStatusById('${order.id}','Diproses')">
 Proses
 </button>
 
 <button class="btn-primary"
-onclick="updateStatus(${i},'Selesai')">
+onclick="updateStatusById('${order.id}','Selesai')">
 Selesai
 </button>
 
 ${order.paymentMethod==="KASIR" && order.paymentStatus!=="Lunas"
 ? `<button class="btn-warning"
-onclick="markPaid(${i})">
+onclick="markPaidById('${order.id}')">
 Tandai Lunas
 </button>` : ""}
 
 <button class="btn-danger"
-onclick="deleteOrder(${i})">
+onclick="deleteOrderById('${order.id}')">
 Hapus
 </button>
 
