@@ -83,6 +83,7 @@ let showAllHistory = false;
 let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
 let modalStartY=0;
 let lastScroll = 0;
+let islandForceShow = false;
 let islandHidden = false;
 
 window.addEventListener("scroll", ()=>{
@@ -90,32 +91,32 @@ window.addEventListener("scroll", ()=>{
 let currentScroll = window.scrollY;
 let delta = currentScroll - lastScroll;
 
-/* Jangan ganggu saat expand / payment */
+/* 🚨 JANGAN HIDE kalau force show */
+if(islandForceShow){
+lastScroll = currentScroll;
+return;
+}
+
+/* Jangan ganggu saat expand */
 if(island.classList.contains("expand")){
 lastScroll = currentScroll;
 return;
 }
 
-/* ===== SCROLL TURUN ===== */
+/* SCROLL TURUN */
 if(delta > 5 && currentScroll > 80){
-
 island.style.transform = "translate(-50%,-80px)";
 island.style.opacity = "0";
-islandHidden = true;
-
 }
 
-/* ===== SCROLL NAIK ===== */
+/* SCROLL NAIK */
 if(delta < -5){
-
 island.style.transform = "translate(-50%,0)";
 island.style.opacity = "1";
-islandHidden = false;
-
 }
 
-/* ===== SHRINK MODE ===== */
-if(currentScroll > 40 && !islandHidden){
+/* SHRINK */
+if(currentScroll > 40){
 island.classList.add("mini");
 }else{
 island.classList.remove("mini");
@@ -123,17 +124,6 @@ island.classList.remove("mini");
 
 lastScroll = currentScroll;
 
-});
-
-modal.addEventListener("touchstart",e=>{
-modalStartY=e.touches[0].clientY;
-});
-
-modal.addEventListener("touchmove",e=>{
-let currentY=e.touches[0].clientY;
-if(currentY-modalStartY>120){
-closeMenuModal();
-}
 });
 
 /* ================= QRIS PROFESSIONAL FIXED ================= */
@@ -547,6 +537,10 @@ setGreeting();
 
 function checkoutProgress(){
 
+islandForceShow = true;
+island.style.transform = "translate(-50%,0)";
+island.style.opacity = "1";
+
 island.classList.remove("success","danger","warning","info");
 island.classList.add("expand","payment");
 
@@ -618,6 +612,7 @@ island.innerHTML="☕ Dhito Cafe";
 }
 
 },800);
+islandForceShow = false;
 }
 
 function add(n){
@@ -789,6 +784,10 @@ closeSheet();
 
 function notify(text,type="info"){
 
+islandForceShow = true;
+island.style.transform = "translate(-50%,0)";
+island.style.opacity = "1";
+
 island.classList.remove("success","info","danger","warning");
 island.classList.add("expand",type);
 
@@ -806,6 +805,7 @@ island.classList.remove("expand",type);
 island.innerHTML="☕ Dhito Cafe";
 island.style.transform="translateX(-50%) scale(1)";
 },2500);
+islandForceShow = false;
 }
 
 let points=parseInt(localStorage.getItem("dhito_points")||0);
