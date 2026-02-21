@@ -93,11 +93,10 @@
 <h3>Pembayaran</h3>
 <input class="input" placeholder="Nama">
 <input class="input" id="phoneInput" placeholder="No HP (08xxxx)">
-<select class="input">
-<option>Metode Pembayaran</option>
-<option>Cash</option>
-<option>QRIS</option>
-<option>Transfer</option>
+<select class="input" id="paymentMethod">
+<option value="">Pilih Metode Pembayaran</option>
+<option value="QRIS">QRIS</option>
+<option value="KASIR">Bayar di Kasir</option>
 </select>
 
 <button class="checkout-btn" onclick="checkout()">Bayar Sekarang</button>
