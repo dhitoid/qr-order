@@ -216,6 +216,8 @@ setTimeout(()=>{
 },300);
 
 setTimeout(()=>{
+  currentOrderData.paymentStatus="Sukses";
+  currentOrderData.orderStatus="Sedang Disiapkan";
   closeQrisModal();
   checkoutProgress();
   setTimeout(()=>{
@@ -482,6 +484,49 @@ modalQty--;
 document.getElementById("modalQty").innerText=modalQty;
 updatePrice(data.find(d=>d.nama===modalTitle.innerText));
 }
+}
+
+function openInvoice(index){
+
+let order=orderHistory[index];
+
+let itemsHTML=order.items.map(i=>
+`<div class="invoice-item">
+<span>${i.nama} (${i.qty}x)</span>
+<span>Rp ${(i.harga*i.qty).toLocaleString()}</span>
+</div>`
+).join("");
+
+document.getElementById("invoiceBody").innerHTML=`
+<div class="invoice-section">
+<div><strong>ID:</strong> ${order.id}</div>
+<div><strong>Tanggal:</strong> ${order.date}</div>
+</div>
+
+<div class="invoice-section">
+${itemsHTML}
+</div>
+
+<div class="invoice-section">
+<div>Subtotal: Rp ${order.subtotal.toLocaleString()}</div>
+<div>Service: Rp ${order.service.toLocaleString()}</div>
+<div>Pajak: Rp ${order.tax.toLocaleString()}</div>
+<hr>
+<div><strong>Total: Rp ${order.total.toLocaleString()}</strong></div>
+</div>
+
+<div class="invoice-section">
+<div><strong>Metode:</strong> ${order.paymentMethod}</div>
+<div><strong>Status Pembayaran:</strong> ${order.paymentStatus}</div>
+<div><strong>Status Pesanan:</strong> ${order.orderStatus}</div>
+</div>
+`;
+
+document.getElementById("invoiceModal").classList.add("show");
+}
+
+function closeInvoice(){
+document.getElementById("invoiceModal").classList.remove("show");
 }
 
 function render(){
@@ -867,7 +912,7 @@ let items=order.items.map(i=>
 ).join("<br>");
 
 return `
-<div class="history-card">
+<div class="history-card" onclick="openInvoice(${orderHistory.indexOf(order)})">
 
 <div class="history-header">
 <span class="history-id">${order.id}</span>
@@ -968,9 +1013,15 @@ let service=subtotal*0.05;
 let tax=subtotal*0.10;
 let grand=subtotal+service+tax;
 
-let method=document.querySelector("select").value;
+let method=document.getElementById("paymentMethod").value;
 
-/* SIMPAN DATA */
+if(!method){
+notify("Pilih metode pembayaran","warning");
+paymentLock = false;
+setCheckoutLoading(false);
+return;
+}
+
 currentOrderData={
 id:generateOrderNumber(),
 date:new Date().toLocaleString(),
@@ -978,7 +1029,10 @@ items:[...cart],
 subtotal,
 service,
 tax,
-total:grand
+total:grand,
+paymentMethod:method,
+paymentStatus: method==="QRIS" ? "Menunggu Pembayaran" : "Belum Dibayar",
+orderStatus: "Diproses"
 };
 
 /* ================= MINI PROCESSING UI ================= */
@@ -1008,13 +1062,20 @@ islandForceShow = false;
 return;
 }
 
-/* ===== NON QRIS ===== */
+/* ===== BAYAR DI KASIR ===== */
+
+if(method==="KASIR"){
 
 closeSheet();
-checkoutProgress();
-completePaymentDirect();
-},900);
 
+currentOrderData.paymentStatus="Belum Dibayar";
+currentOrderData.orderStatus="Menunggu Pembayaran di Kasir";
+
+finalizePayment();
+
+notify("💵 Silakan bayar di kasir","info");
+
+return;
 }
 
 updateLoyalty();
@@ -1024,6 +1085,8 @@ render();
 
 /* ================= EXPOSE GLOBAL FUNCTIONS ================= */
 
+window.openInvoice = openInvoice;
+window.closeInvoice = closeInvoice;
 window.toggleHistoryView = toggleHistoryView;
 window.openMenuDetail = openMenuDetail;
 window.toggleTopping = toggleTopping;
