@@ -147,6 +147,7 @@ let overlay=document.getElementById("qrisOverlayStatus");
 overlay.innerText="Menghasilkan QR...";
 overlay.style.background="rgba(0,0,0,0.7)";
 
+let orderNo = currentOrderData.id;
 let qrData=`DHITOCAFE|${orderNo}|${total}|${Date.now()}`;
 let qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data="+encodeURIComponent(qrData);
 
@@ -938,6 +939,7 @@ btn.innerText="Checkout";
 }
 
 function checkout(){
+
 if(paymentLock) return;
 
 let inputs=document.querySelectorAll(".input");
@@ -968,7 +970,7 @@ let grand=subtotal+service+tax;
 
 let method=document.querySelector("select").value;
 
-/* SIMPAN TEMP DATA */
+/* SIMPAN DATA */
 currentOrderData={
 id:generateOrderNumber(),
 date:new Date().toLocaleString(),
@@ -979,15 +981,40 @@ tax,
 total:grand
 };
 
+/* ================= MINI PROCESSING UI ================= */
+
+islandForceShow = true;
+island.classList.add("expand","payment");
+island.innerHTML=`
+💳 Memverifikasi Data
+<div class="island-status">
+Menyiapkan transaksi...
+</div>
+`;
+
+/* Delay singkat saja */
+setTimeout(()=>{
+
+/* ===== QRIS FLOW ===== */
 if(method==="QRIS"){
-closeSheet();
+
+closeSheet(); // baru close setelah animasi
 startQris(grand);
+
+island.classList.remove("expand","payment");
+island.innerHTML="☕ Dhito Cafe";
+islandForceShow = false;
+
 return;
 }
 
-/* NON QRIS */
+/* ===== NON QRIS ===== */
+
 closeSheet();
+checkoutProgress();
 completePaymentDirect();
+},900);
+
 }
 
 updateLoyalty();
