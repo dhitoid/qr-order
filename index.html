@@ -765,6 +765,21 @@ border:1px solid #ff453a;
 box-shadow:0 0 20px rgba(255,69,58,0.3);
 }
 
+.qris-modal{
+position:fixed;
+inset:0;
+display:none;   
+align-items:center;
+justify-content:center;
+background:rgba(0,0,0,0.6);
+backdrop-filter:blur(30px);
+z-index:5000;
+}
+
+.qris-modal.show{
+display:flex;       
+}
+
 .download-qris{
 width:100%;
 padding:14px;
@@ -1012,7 +1027,7 @@ let qrisInterval;
 let qrisTime = 60;
 
 function startQris(total){
-
+document.body.style.overflow="hidden";
 let orderId = generateOrderNumber();
 
 /* Generate QR Dynamic */
@@ -1057,6 +1072,7 @@ checkoutSuccessAfterQR();
 }
 
 function cancelQris(){
+document.body.style.overflow="auto";
 clearInterval(qrisInterval);
 document.getElementById("qrisModal").classList.remove("show");
 }
@@ -1642,7 +1658,7 @@ return "#ORD-"+date+"-"+random;
 }
 
 function checkout(){
-
+document.getElementById("qrisModal").classList.remove("show");
 /* ================= VALIDASI ================= */
 let inputs=document.querySelectorAll(".input");
 for(let i of inputs){
@@ -1668,11 +1684,15 @@ let tax=subtotal*0.10;
 let grand=subtotal+service+tax;
 let method = document.querySelector("select").value;
 
+/* Kalau QRIS */
 if(method === "QRIS"){
 closeSheet();
 startQris(grand);
-return;
+return;   // ⬅️ STOP disini
 }
+
+/* Kalau bukan QRIS */
+document.getElementById("qrisModal").classList.remove("show");
 
 /* ================= ORDER NUMBER ================= */
 let orderNo=generateOrderNumber();
