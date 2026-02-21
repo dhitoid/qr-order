@@ -138,42 +138,34 @@
 <div class="qris-modal" id="qrisModal">
   <div class="qris-content">
 
-    <!-- Drag Handle -->
     <div class="modal-handle"></div>
 
-    <!-- Header -->
     <div class="qris-header">
       <h3>Pembayaran QRIS</h3>
-      <span class="qris-badge waiting" id="qrisBadge">Menunggu</span>
+      <button class="close-btn" onclick="cancelQris()">✕</button>
     </div>
 
-    <!-- Loading -->
-    <div class="qris-loading" id="qrisLoading">
-      <div class="spinner"></div>
-      <p>Menghasilkan QRIS...</p>
-    </div>
-
-    <!-- QR Area -->
-    <div class="qris-qr-wrapper">
-      <img id="qrisImage"/>
-      <div class="qris-ring">
-        <svg>
-          <circle cx="60" cy="60" r="54"></circle>
-          <circle cx="60" cy="60" r="54" id="progressRing"></circle>
-        </svg>
-        <div class="ring-time">
-          <span id="qrisTimer">60</span>
-          <small>detik</small>
-        </div>
-      </div>
-    </div>
-
-    <!-- Total -->
     <div class="qris-total" id="qrisTotal"></div>
 
-    <!-- Status -->
-    <div class="qris-status" id="qrisStatusText">
-      Menunggu pembayaran...
+    <!-- QR BOX -->
+    <div class="qris-box">
+
+      <div class="qris-loading" id="qrisLoading">
+        <div class="spinner"></div>
+        <p>Menghasilkan QR...</p>
+      </div>
+
+      <img id="qrisImage" />
+
+      <div class="qris-overlay-status" id="qrisOverlayStatus">
+        Menunggu Pembayaran
+      </div>
+
+    </div>
+
+    <!-- Timer -->
+    <div class="qris-timer">
+      Berlaku <span id="qrisTimer">60</span> detik
     </div>
 
     <!-- Buttons -->
