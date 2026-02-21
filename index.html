@@ -1219,11 +1219,13 @@ updateCart();
 }
 
 function updateCart(){
+
 let subtotal=0;
 
 document.getElementById("cartItems").innerHTML=
 cart.map((i,idx)=>{
 subtotal+=i.harga*i.qty;
+
 return `
 <div class="cart-item">
 <div class="cart-item-info"
@@ -1255,6 +1257,8 @@ document.getElementById("tax").innerText="Rp "+tax.toLocaleString();
 document.getElementById("grandTotal").innerText="Rp "+grand.toLocaleString();
 
 cartCount.innerText=cart.reduce((a,b)=>a+b.qty,0);
+
+}
 
 function editCartItem(index){
 
@@ -1477,7 +1481,7 @@ return;
 }
 
 if(cart.length===0){
-notify("Keranjang kosong","error");
+notify("Keranjang kosong","danger");
 return;
 }
 
