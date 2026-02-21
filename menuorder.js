@@ -554,6 +554,11 @@ document.getElementById("invoiceBody").innerHTML=`
 <img src="${qrUrl}" class="invoice-qr-small">
 </div>
 
+<div style="font-size:13px;opacity:.85;margin-bottom:10px;">
+<strong>Nama:</strong> ${order.customerName || "-"}<br>
+<strong>No HP:</strong> ${order.customerPhone || "-"}
+</div>
+
 <div class="invoice-divider"></div>
 
 ${itemsHTML}
@@ -1084,6 +1089,8 @@ let tax=subtotal*0.10;
 let grand=subtotal+service+tax;
 
 let method=document.getElementById("paymentMethod").value;
+let name=document.querySelectorAll(".input")[0].value;
+let phone=document.getElementById("phoneInput").value;
 
 if(!method){
 notify("Pilih metode pembayaran","warning");
@@ -1102,7 +1109,9 @@ tax,
 total:grand,
 paymentMethod:method,
 paymentStatus: method==="QRIS" ? "Menunggu Pembayaran" : "Belum Dibayar",
-orderStatus: "Diproses"
+orderStatus: "Diproses",
+customerName:name,
+customerPhone:phone
 };
 
 /* ================= MINI PROCESSING UI ================= */
@@ -1141,9 +1150,12 @@ closeSheet();
 currentOrderData.paymentStatus="Belum Dibayar";
 currentOrderData.orderStatus="Menunggu Pembayaran di Kasir";
 
-finalizePayment();
+checkoutProgress();
 
-notify("💵 Silakan bayar di kasir","info");
+setTimeout(()=>{
+finalizePayment();
+openInvoice(0); // langsung buka invoice terbaru
+},2000);
 
 return;
 }
