@@ -258,7 +258,7 @@ opacity:.9;
 <button class="btn pay" onclick="processPayment(true)">Bayar & Lunas</button>
 <button class="btn unpaid" onclick="processPayment(false)">Buat (Belum Lunas)</button>
 <button class="btn reset" onclick="resetCart()">Reset</button>
-<button class="btn" style="background:#3b82f6;color:white"onclick="window.location.href='kasir.html'">Kembali ke Menu Kasir</button>
+<button class="btn" style="background:#3b82f6;color:white" onclick="window.location.href='kasir.html'">Kembali ke Menu Kasir</button>
 </div>
 
 <div class="success" id="success">
@@ -417,11 +417,19 @@ showIsland("Memproses pembayaran...",true);
 
 let progress=0;
 let interval=setInterval(()=>{
+
 progress+=20;
-document.getElementById("progressFill").style.width=progress+"%";
 
-let customer = document.getElementById("customerName").value || "Walk In";
+let fill=document.getElementById("progressFill");
+if(fill) fill.style.width=progress+"%";
 
+if(progress>=100){
+
+clearInterval(interval); // 🔥 STOP interval
+
+let customer=document.getElementById("customerName").value || "Walk In";
+
+/* ===== SAVE ORDER SEKALI SAJA ===== */
 let orders=getOrders();
 orders.unshift({
 id:"#ORD-"+Date.now(),
@@ -440,6 +448,7 @@ customerPhone:"-"
 });
 saveOrders(orders);
 
+/* ===== SUCCESS UI ===== */
 if(paid){
 
 document.getElementById("successText")
@@ -457,11 +466,16 @@ showIsland("Transaksi sukses • "+customer);
 showIsland("Order dibuat • "+customer);
 }
 
+/* ===== HIDE ISLAND ===== */
 setTimeout(()=>{
 document.getElementById("island").classList.remove("show");
 },1500);
 
+/* ===== RESET CART ===== */
+setTimeout(()=>{
 resetCart();
+},500);
+
 }
 
 },250);
