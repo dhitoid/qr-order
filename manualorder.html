@@ -103,15 +103,43 @@ const kasirMenu = MENU_DATA;
 let cart = [];
 let island = document.getElementById("island");
 
-function formatPhone(input){
+/* ================= AUTO FORMAT NO HP INDONESIA ================= */
 
-let value = input.value.replace(/[^0-9]/g,'');
+const phoneInput = document.getElementById("phoneInput");
 
+if(phoneInput){
+phoneInput.addEventListener("input", function(e){
+
+let value = e.target.value.replace(/\D/g,'');
+
+/* ubah 08 -> 628 */
 if(value.startsWith("0")){
-value = "62"+value.substring(1);
+value = "62" + value.substring(1);
 }
 
-input.value = value;
+/* max 13-14 digit */
+value = value.substring(0,14);
+
+let formatted = "";
+
+if(value.length > 0){
+formatted = "+" + value.substring(0,2);
+}
+
+if(value.length > 2){
+formatted += " " + value.substring(2,5);
+}
+
+if(value.length > 5){
+formatted += "-" + value.substring(5,9);
+}
+
+if(value.length > 9){
+formatted += "-" + value.substring(9,13);
+}
+
+e.target.value = formatted;
+});
 }
 
 /* ================= RENDER MENU ================= */
