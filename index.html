@@ -2,36 +2,69 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Manual Order - Dhito Cafe</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Dhito Cafe 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="menuorder.css">
+<link rel="stylesheet" href="menuorder.css"
 
 </head>
 <body>
 
-<div class="dynamic-island" id="island">☕ Manual Order</div>
+<div class="dynamic-island" id="island">☕ Dhito Cafe</div>
 
 <div class="hero">
-  <div class="greeting">Mode Kasir</div>
-  <div class="headline">Input Order Manual</div>
+  <div class="greeting" id="greeting"></div>
+  <div class="headline">Siap nongki hari ini?</div>
+</div>
+
+<div class="search-container">
+<input type="text" id="searchInput" placeholder="Cari menu favoritmu...">
+</div>
+
+<div class="categories">
+
+<div class="category-dropdown">
+  <button class="active dropdown-btn" onclick="toggleDropdown(event)">
+    Semua ⌄
+  </button>
+
+  <div class="dropdown-menu" id="categoryDropdown">
+    <div onclick="selectCategory('all')">Semua</div>
+    <div onclick="selectCategory('makanan')">🍛 Makanan</div>
+    <div onclick="selectCategory('minuman')">☕ Minuman</div>
+    <div onclick="selectCategory('cemilan')">🍟 Cemilan</div>
+    <div onclick="selectCategory('promo')">🔥 Promo</div>
+  </div>
+</div>
+
+<button onclick="filterMenu('makanan',this)">Makanan</button>
+<button onclick="filterMenu('minuman',this)">Minuman</button>
+<button onclick="filterMenu('cemilan',this)">Cemilan</button>
+<button onclick="filterMenu('promo',this)">Promo</button>
+
 </div>
 
 <div class="menu-grid" id="menu"></div>
-
+<div class="loyalty">
+  <div class="loyalty-text">Level Silver 🥈</div>
+  <div class="loyalty-bar">
+    <div class="loyalty-fill" id="loyaltyFill"></div>
+  </div>
+</div>
+<div class="order-history-section">
+  <h3 class="section-title">🧾 Riwayat Pesanan</h3>
+  <div id="orderHistoryList"></div>
+</div>
 <div class="floating-cart" onclick="openSheet()">
 🛒
 <div class="cart-count" id="cartCount">0</div>
 </div>
 
-<!-- SHEET SAMA SEPERTI INDEX -->
 <div class="sheet" id="sheet">
 <div class="handle"></div>
 
 <h3>Detail Pesanan</h3>
 <div id="cartItems"></div>
-
 <div class="checkout-summary">
   <div class="summary-row">
     <span>Subtotal</span>
@@ -45,17 +78,20 @@
     <span>Pajak (10%)</span>
     <span id="tax"></span>
   </div>
+
   <div class="summary-divider"></div>
+
   <div class="summary-row total-row">
     <span>Total</span>
     <span id="grandTotal"></span>
   </div>
 </div>
+<h4 id="total"></h4>
 
 <hr style="margin:15px 0;border-color:rgba(255,255,255,0.1)">
 
 <h3>Pembayaran</h3>
-<input class="input" id="customerName" placeholder="Nama">
+<input class="input" placeholder="Nama">
 <input class="input" id="phoneInput" placeholder="No HP (08xxxx)">
 <select class="input" id="paymentMethod">
 <option value="">Pilih Metode Pembayaran</option>
@@ -63,20 +99,44 @@
 <option value="KASIR">Bayar di Kasir</option>
 </select>
 
-<button class="checkout-btn" onclick="manualCheckout()">
-Simpan ke Kasir
-</button>
-
-<br><br>
-<button class="btn-secondary" onclick="window.location.href='kasir.html'">
-⬅ Kembali ke Kasir
-</button>
-
+<button class="checkout-btn" onclick="checkout()">Bayar Sekarang</button>
 </div>
 
-<!-- QRIS MODAL SAMA PERSIS INDEX -->
+<div class="menu-modal" id="menuModal">
+  <div class="menu-modal-content">
+
+    <div class="modal-handle" onclick="closeMenuModal()"></div>
+
+    <div class="menu-modal-img" id="modalImg"></div>
+
+    <div class="menu-modal-body">
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+
+      <div class="topping-section">
+        <h4>Pilih Topping</h4>
+        <div class="topping-list" id="toppingList"></div>
+      </div>
+
+      <div class="modal-qty">
+        <button onclick="decreaseModal()">−</button>
+        <span id="modalQty">1</span>
+        <button onclick="increaseModal()">+</button>
+      </div>
+
+      <div class="modal-price" id="modalPrice"></div>
+
+      <button class="modal-add" id="modalAddBtn">
+        Tambah ke Keranjang
+      </button>
+
+    </div>
+  </div>
+</div>
+
 <div class="qris-modal" id="qrisModal">
   <div class="qris-content">
+
     <div class="modal-handle"></div>
 
     <div class="qris-header">
@@ -87,16 +147,21 @@ Simpan ke Kasir
     <div class="qris-total" id="qrisTotal"></div>
 
     <div class="qris-box">
+
       <div class="qris-loading" id="qrisLoading">
         <div class="spinner"></div>
         <p>Menghasilkan QR...</p>
       </div>
 
       <img id="qrisImage" />
+    <div class="success-animation" id="successAnim">
+      <div class="checkmark"></div>
+    </div>
 
       <div class="qris-overlay-status" id="qrisOverlayStatus">
         Menunggu Pembayaran
       </div>
+
     </div>
 
     <div class="qris-timer">
@@ -105,86 +170,30 @@ Simpan ke Kasir
 
     <div class="qris-buttons">
       <button class="btn-secondary" onclick="cancelQris()">Batal</button>
-      <button class="btn-primary" onclick="confirmManualPayment()">Konfirmasi Bayar</button>
+      <button class="btn-primary" onclick="downloadQris()">Unduh QR</button>
     </div>
+
   </div>
 </div>
 
+<div class="invoice-modal" id="invoiceModal">
+  <div class="invoice-content">
+    <div class="modal-handle" onclick="closeInvoice()"></div>
+
+    <h3>Invoice Pesanan</h3>
+
+    <div id="invoiceBody"></div>
+
+    <div class="invoice-actions">
+  <button class="btn-secondary" onclick="closeInvoice()">Tutup</button>
+  <button class="btn-primary" onclick="downloadInvoicePDF()">Download PDF</button>
+</div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="daftarmenu.js"></script>
 <script src="menuorder.js"></script>
-
-<script>
-
-/* ================= OVERRIDE CHECKOUT ================= */
-
-function manualCheckout(){
-
-if(cart.length === 0){
-showNotification("Keranjang kosong");
-return;
-}
-
-let method = document.getElementById("paymentMethod").value;
-if(!method){
-showNotification("Pilih metode pembayaran");
-return;
-}
-
-if(method === "QRIS"){
-openQrisModal();
-return;
-}
-
-saveManualOrder("Lunas");
-
-}
-
-/* ================= SIMPAN KE KASIR ================= */
-
-function saveManualOrder(status){
-
-let subtotal = calculateSubtotal();
-let service  = subtotal * 0.05;
-let tax      = subtotal * 0.10;
-let total    = subtotal + service + tax;
-
-let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
-
-orders.unshift({
-id:"#ORD-"+Date.now(),
-date:new Date().toLocaleString(),
-timestamp:Date.now(),
-items:[...cart],
-subtotal,
-service,
-tax,
-total,
-paymentMethod:document.getElementById("paymentMethod").value,
-paymentStatus:status,
-orderStatus:"Diproses",
-customerName:document.getElementById("customerName").value || "Walk In",
-customerPhone:document.getElementById("phoneInput").value || "-"
-});
-
-localStorage.setItem("order_history", JSON.stringify(orders));
-
-cart = [];
-updateCartUI();
-
-closeSheet();
-showNotification("Order masuk ke kasir");
-
-}
-
-/* ================= QRIS CONFIRM ================= */
-
-function confirmManualPayment(){
-saveManualOrder("Lunas");
-closeQrisModal();
-showNotification("Pembayaran berhasil");
-}
-
-</script>
-
 </body>
 </html>
