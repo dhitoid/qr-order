@@ -256,18 +256,23 @@ Buat Order
 <script>
 
 /* ================= SIDEBAR ================= */
-
 function toggleSidebar(){
 document.getElementById("sidebar").classList.toggle("active");
 document.getElementById("overlay").classList.toggle("active");
 }
 
-/* ================= DATA ================= */
+/* ================= MENU DATA ================= */
 
-let methodFilter="ALL";
-let statusFilter="ALL";
-let paymentFilter="ALL";
-let searchKeyword="";
+const kasirMenu=[
+{nama:"Nasi Goreng",harga:25000,kategori:"makanan"},
+{nama:"Es Kopi",harga:18000,kategori:"minuman"},
+{nama:"Kentang",harga:15000,kategori:"cemilan"},
+{nama:"Paket Hemat",harga:45000,kategori:"promo"}
+];
+
+/* ================= CART ================= */
+
+let cartKasir=[];
 
 /* ================= STORAGE ================= */
 
@@ -279,31 +284,12 @@ function saveOrders(data){
 localStorage.setItem("order_history",JSON.stringify(data));
 }
 
-/* ================= FILTER ================= */
+/* ================= FILTER STATE ================= */
 
-function setMethod(val,el){
-methodFilter=val;
-activate(el,"methodFilter");
-renderOrders();
-}
-
-function setStatus(val,el){
-statusFilter=val;
-activate(el,"statusFilter");
-renderOrders();
-}
-
-function setPayment(val,el){
-paymentFilter=val;
-activate(el,"paymentFilter");
-renderOrders();
-}
-
-function activate(el,groupId){
-document.querySelectorAll("#"+groupId+" button")
-.forEach(b=>b.classList.remove("active"));
-el.classList.add("active");
-}
+let methodFilter="ALL";
+let statusFilter="ALL";
+let paymentFilter="ALL";
+let searchKeyword="";
 
 /* ================= SEARCH ================= */
 
@@ -337,35 +323,26 @@ renderOrders();
 }
 
 function deleteOrderById(id){
-let orders=getOrders();
-orders=orders.filter(o=>o.id!==id);
+let orders=getOrders().filter(o=>o.id!==id);
 saveOrders(orders);
 renderOrders();
 }
 
-/* ================= RENDER ================= */
+/* ================= RENDER ORDER ================= */
 
 function renderOrders(){
 
-let orders=getOrders();
+let orders=getOrders().slice()
+.sort((a,b)=>b.timestamp-a.timestamp);
 
-/* SORT TERBARU BERDASARKAN TIMESTAMP */
-orders = orders
-.slice()
-.sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
-
-/* FILTER */
-if(methodFilter!=="ALL"){
+if(methodFilter!=="ALL")
 orders=orders.filter(o=>o.paymentMethod===methodFilter);
-}
 
-if(statusFilter!=="ALL"){
+if(statusFilter!=="ALL")
 orders=orders.filter(o=>o.orderStatus===statusFilter);
-}
 
-if(paymentFilter!=="ALL"){
+if(paymentFilter!=="ALL")
 orders=orders.filter(o=>o.paymentStatus===paymentFilter);
-}
 
 if(searchKeyword){
 orders=orders.filter(o=>
@@ -399,7 +376,6 @@ if(order.orderStatus==="Selesai")statusClass="done";
 
 return `
 <div class="order-card">
-
 <div style="display:flex;justify-content:space-between;font-size:13px;opacity:.8;">
 <span>${order.id}</span>
 <span>${order.date}</span>
@@ -450,54 +426,81 @@ Hapus
 </button>
 
 </div>
-
 </div>
 `;
 
 }).join("");
 }
 
+/* ================= MANUAL ORDER UI ================= */
+
 function renderManualMenu(){
 
 let container=document.getElementById("manualMenu");
 
 container.innerHTML=kasirMenu.map(item=>`
-<div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.08);padding:8px 12px;border-radius:12px;">
-<span>${item.nama}</span>
-<button onclick="addManual('${item.nama}')">Tambah</button>
+<div style="background:rgba(255,255,255,0.07);
+padding:12px;
+border-radius:16px;
+display:flex;
+justify-content:space-between;
+align-items:center;">
+
+<div>
+<div style="font-weight:600">${item.nama}</div>
+<div style="font-size:12px;opacity:.6">
+Rp ${item.harga.toLocaleString()}
+</div>
+</div>
+
+<div style="display:flex;gap:6px;">
+<button onclick="changeQty('${item.nama}',-1)">-</button>
+<button onclick="changeQty('${item.nama}',1)">+</button>
+</div>
+
 </div>
 `).join("");
-
 }
 
-function addManual(nama){
+function changeQty(nama,delta){
 
 let item=kasirMenu.find(i=>i.nama===nama);
+let existing=cartKasir.find(c=>c.nama===nama);
 
-let existing=manualCart.find(c=>c.nama===nama);
-
-if(existing){
-existing.qty++;
-}else{
-manualCart.push({
-nama:item.nama,
-harga:item.harga,
-qty:1
-});
+if(!existing && delta>0){
+cartKasir.push({nama:item.nama,harga:item.harga,qty:1});
+}else if(existing){
+existing.qty+=delta;
+if(existing.qty<=0)
+cartKasir=cartKasir.filter(c=>c.nama!==nama);
 }
 
-alert(nama+" ditambahkan");
+renderCartPreview();
 }
+
+function renderCartPreview(){
+
+let subtotal=0;
+cartKasir.forEach(i=>subtotal+=i.harga*i.qty);
+
+document.getElementById("manualMenu")
+.insertAdjacentHTML("beforeend",
+`<div style="margin-top:10px;font-size:12px;opacity:.7">
+Subtotal: Rp ${subtotal.toLocaleString()}
+</div>`);
+}
+
+/* ================= CREATE ORDER ================= */
 
 function createManualOrder(){
 
-if(manualCart.length===0){
+if(cartKasir.length===0){
 alert("Belum ada item");
 return;
 }
 
 let subtotal=0;
-manualCart.forEach(i=>subtotal+=i.harga*i.qty);
+cartKasir.forEach(i=>subtotal+=i.harga*i.qty);
 
 let service=subtotal*0.05;
 let tax=subtotal*0.10;
@@ -505,11 +508,11 @@ let total=subtotal+service+tax;
 
 let orders=getOrders();
 
-let newOrder={
+orders.unshift({
 id:"#ORD-"+Date.now(),
 date:new Date().toLocaleString(),
 timestamp:Date.now(),
-items:manualCart,
+items:cartKasir,
 subtotal,
 service,
 tax,
@@ -519,25 +522,27 @@ paymentStatus:"Belum Lunas",
 orderStatus:"Menunggu",
 customerName:"Walk In",
 customerPhone:"-"
-};
+});
 
-orders.unshift(newOrder);
 saveOrders(orders);
 
-manualCart=[];
+cartKasir=[];
 renderOrders();
+renderManualMenu();
+
 alert("Order berhasil dibuat");
 }
 
-/* AUTO SYNC ANTAR TAB */
+/* ================= AUTO SYNC ================= */
+
 window.addEventListener("storage",function(e){
-if(e.key==="order_history"){
-renderOrders();
-}
+if(e.key==="order_history") renderOrders();
 });
 
+/* INIT */
 renderOrders();
 renderManualMenu();
+
 </script>
 
 </body>
