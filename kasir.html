@@ -157,8 +157,18 @@ margin-top:50px;
 <div class="header">
 
 <div class="header-top">
-<h2>☕ Dhito Cafe - Kasir</h2>
-<div id="totalOrders"></div>
+  <h2>☕ Dhito Cafe - Kasir</h2>
+
+  <div style="display:flex;gap:10px;align-items:center;">
+    <a href="statistik.html" 
+       style="background:#3b82f6;padding:8px 14px;
+       border-radius:14px;text-decoration:none;
+       color:white;font-size:12px;">
+       📊 Statistik
+    </a>
+
+    <div id="totalOrders"></div>
+  </div>
 </div>
 
 <div class="search-container">
@@ -313,8 +323,7 @@ container.innerHTML="<div class='empty'>Tidak ada data ditemukan</div>";
 return;
 }
 
-orders=orders.slice().reverse();
-
+orders = orders.slice().reverse();
 container.innerHTML=orders.map(order=>{
 
 let items=order.items.map(x=>
