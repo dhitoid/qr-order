@@ -9,6 +9,12 @@
 <script src="config.js"></script>
 
 <style>
+:root{
+--glass: rgba(255,255,255,0.08);
+--blur: blur(25px);
+--primary: #4CAF50;
+}
+
 body{
 margin:0;
 background:linear-gradient(135deg,#0f172a,#1e293b);
@@ -17,8 +23,35 @@ font-family:'Inter',sans-serif;
 padding:20px;
 }
 
-h2{margin-bottom:20px}
+/* ===== HEADER ===== */
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+}
 
+.header h2{
+margin:0;
+font-weight:600;
+}
+
+.back-btn{
+background:var(--glass);
+backdrop-filter:var(--blur);
+border:none;
+color:white;
+padding:8px 14px;
+border-radius:14px;
+cursor:pointer;
+transition:.2s;
+}
+
+.back-btn:hover{
+transform:translateY(-2px);
+}
+
+/* ===== MENU GRID ===== */
 .menu-grid{
 display:grid;
 grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
@@ -26,52 +59,106 @@ gap:15px;
 }
 
 .card{
-background:rgba(255,255,255,0.07);
+background:var(--glass);
+backdrop-filter:var(--blur);
 padding:15px;
 border-radius:18px;
-backdrop-filter:blur(15px);
 transition:.3s;
 }
 
-.card:hover{transform:translateY(-4px)}
+.card:hover{
+transform:translateY(-5px);
+}
 
-.card h4{margin:0 0 5px 0}
+.card h4{
+margin:0 0 5px 0;
+font-weight:600;
+}
 
-.card p{font-size:12px;opacity:.6}
+.card p{
+font-size:12px;
+opacity:.6;
+margin:0;
+}
 
 .qty{
 display:flex;
-gap:6px;
-margin-top:10px;
+gap:8px;
+margin-top:12px;
 }
 
-button{
+.qty button{
+flex:1;
 border:none;
-padding:6px 10px;
+padding:6px;
 border-radius:12px;
 cursor:pointer;
+background:rgba(255,255,255,0.15);
+color:white;
+transition:.2s;
 }
 
-.primary{background:#4CAF50;color:white}
+.qty button:hover{
+background:rgba(255,255,255,0.25);
+}
 
+/* ===== CART ===== */
 .cart-box{
-margin-top:25px;
-background:rgba(255,255,255,0.08);
-padding:15px;
-border-radius:18px;
+margin-top:30px;
+background:var(--glass);
+backdrop-filter:var(--blur);
+padding:18px;
+border-radius:20px;
+}
+
+.cart-box h3{
+margin-top:0;
+}
+
+.cart-item{
+display:flex;
+justify-content:space-between;
+margin-bottom:8px;
+font-size:14px;
+}
+
+.total{
+margin-top:15px;
+font-weight:600;
+}
+
+.primary{
+margin-top:15px;
+width:100%;
+border:none;
+padding:10px;
+border-radius:16px;
+background:var(--primary);
+color:white;
+font-weight:600;
+cursor:pointer;
+transition:.2s;
+}
+
+.primary:hover{
+transform:translateY(-2px);
 }
 </style>
 </head>
+
 <body>
 
+<div class="header">
 <h2>➕ Manual Order</h2>
+<button class="back-btn" onclick="goBack()">← Kembali ke Kasir</button>
+</div>
 
 <div class="menu-grid" id="menuGrid"></div>
 
 <div class="cart-box">
 <h3>🛒 Keranjang</h3>
 <div id="cartList"></div>
-<h4 id="cartTotal">Total: Rp 0</h4>
+<div class="total" id="cartTotal">Total: Rp 0</div>
 <button class="primary" onclick="createOrder()">Buat Order</button>
 </div>
 
@@ -80,6 +167,10 @@ border-radius:18px;
 const kasirMenu = MENU_DATA;
 let cart=[];
 
+function goBack(){
+window.location.href="kasir.html";
+}
+
 function renderMenu(){
 document.getElementById("menuGrid").innerHTML=
 kasirMenu.map(item=>`
@@ -87,7 +178,7 @@ kasirMenu.map(item=>`
 <h4>${item.nama}</h4>
 <p>Rp ${item.harga.toLocaleString()}</p>
 <div class="qty">
-<button onclick="changeQty('${item.nama}',-1)">-</button>
+<button onclick="changeQty('${item.nama}',-1)">−</button>
 <button onclick="changeQty('${item.nama}',1)">+</button>
 </div>
 </div>
@@ -116,8 +207,13 @@ let subtotal=0;
 
 document.getElementById("cartList").innerHTML=
 cart.map(i=>{
-subtotal+=i.harga*i.qty;
-return `${i.nama} (${i.qty}x)<br>`;
+let total=i.harga*i.qty;
+subtotal+=total;
+return `
+<div class="cart-item">
+<span>${i.nama} (${i.qty}x)</span>
+<span>Rp ${total.toLocaleString()}</span>
+</div>`;
 }).join("");
 
 document.getElementById("cartTotal")
@@ -134,9 +230,9 @@ return;
 let subtotal=0;
 cart.forEach(i=>subtotal+=i.harga*i.qty);
 
-let service=subtotal*0.05;
-let tax=subtotal*0.10;
-let total=subtotal+service+tax;
+let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
+let tax = subtotal * APP_CONFIG.TAX_PERCENT;
+let total = subtotal + service + tax;
 
 let orders=JSON.parse(localStorage.getItem("order_history")||"[]");
 
@@ -160,7 +256,8 @@ localStorage.setItem("order_history",JSON.stringify(orders));
 
 cart=[];
 renderCart();
-alert("Order berhasil dibuat");
+
+alert("Order berhasil dibuat!");
 }
 
 renderMenu();
