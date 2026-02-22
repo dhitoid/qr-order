@@ -1157,3 +1157,37 @@ background:linear-gradient(145deg,#111827,#1f2937);
 padding:10px;
 border-radius:20px;
 }
+
+.qris-popup{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.7);
+display:none;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+
+.qris-popup.show{
+display:flex;
+}
+
+.qris-box{
+background:rgba(255,255,255,0.1);
+backdrop-filter:blur(20px);
+padding:25px;
+border-radius:20px;
+text-align:center;
+color:white;
+width:280px;
+}
+
+.qris-box img{
+margin:15px 0;
+}
+
+.btn-cancel{
+margin-top:10px;
+background:#ff4d4d;
+color:white;
+}
