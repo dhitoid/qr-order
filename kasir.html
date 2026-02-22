@@ -244,18 +244,21 @@ oninput="handleSearch()">
 
 <script>
 
-/* SIDEBAR */
+/* ================= SIDEBAR ================= */
+
 function toggleSidebar(){
 document.getElementById("sidebar").classList.toggle("active");
 document.getElementById("overlay").classList.toggle("active");
 }
 
-/* ================= LOGIC LAMA ================= */
+/* ================= DATA ================= */
 
 let methodFilter="ALL";
 let statusFilter="ALL";
 let paymentFilter="ALL";
 let searchKeyword="";
+
+/* ================= STORAGE ================= */
 
 function getOrders(){
 return JSON.parse(localStorage.getItem("order_history")||"[]");
@@ -264,6 +267,8 @@ return JSON.parse(localStorage.getItem("order_history")||"[]");
 function saveOrders(data){
 localStorage.setItem("order_history",JSON.stringify(data));
 }
+
+/* ================= FILTER ================= */
 
 function setMethod(val,el){
 methodFilter=val;
@@ -289,30 +294,68 @@ document.querySelectorAll("#"+groupId+" button")
 el.classList.add("active");
 }
 
+/* ================= SEARCH ================= */
+
 function handleSearch(){
 searchKeyword=document.getElementById("searchInput")
 .value.toLowerCase().trim();
 renderOrders();
 }
 
+/* ================= UPDATE STATUS ================= */
+
+function updateStatusById(id,status){
+let orders=getOrders();
+let order=orders.find(o=>o.id===id);
+if(!order)return;
+
+order.orderStatus=status;
+saveOrders(orders);
+renderOrders();
+}
+
+function markPaidById(id){
+let orders=getOrders();
+let order=orders.find(o=>o.id===id);
+if(!order)return;
+
+order.paymentStatus="Lunas";
+order.orderStatus="Diproses";
+saveOrders(orders);
+renderOrders();
+}
+
+function deleteOrderById(id){
+let orders=getOrders();
+orders=orders.filter(o=>o.id!==id);
+saveOrders(orders);
+renderOrders();
+}
+
+/* ================= RENDER ================= */
+
 function renderOrders(){
 
 let orders=getOrders();
 
-/* SORT TERBARU */
+/* SORT TERBARU BERDASARKAN TIMESTAMP */
 orders = orders
 .slice()
 .sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
 
+/* FILTER */
 if(methodFilter!=="ALL"){
 orders=orders.filter(o=>o.paymentMethod===methodFilter);
 }
+
 if(statusFilter!=="ALL"){
 orders=orders.filter(o=>o.orderStatus===statusFilter);
 }
+
 if(paymentFilter!=="ALL"){
 orders=orders.filter(o=>o.paymentStatus===paymentFilter);
 }
+
 if(searchKeyword){
 orders=orders.filter(o=>
 (o.customerName||"").toLowerCase().includes(searchKeyword)||
@@ -322,7 +365,7 @@ orders=orders.filter(o=>
 }
 
 document.getElementById("totalOrders")
-.innerText="Total: "+orders.length;
+.innerText="Total: "+orders.length+" order";
 
 let container=document.getElementById("orders");
 
@@ -345,6 +388,7 @@ if(order.orderStatus==="Selesai")statusClass="done";
 
 return `
 <div class="order-card">
+
 <div style="display:flex;justify-content:space-between;font-size:13px;opacity:.8;">
 <span>${order.id}</span>
 <span>${order.date}</span>
@@ -365,16 +409,44 @@ Rp ${order.total.toLocaleString()}
 <span class="badge ${paymentBadge}">
 ${order.paymentStatus}
 </span>
+
 <span class="badge ${statusClass}">
 ${order.orderStatus}
 </span>
 </div>
+
+<div class="actions">
+
+<button class="btn-info"
+onclick="updateStatusById('${order.id}','Diproses')">
+Proses
+</button>
+
+<button class="btn-primary"
+onclick="updateStatusById('${order.id}','Selesai')">
+Selesai
+</button>
+
+${order.paymentMethod==="KASIR" && order.paymentStatus!=="Lunas"
+? `<button class="btn-warning"
+onclick="markPaidById('${order.id}')">
+Tandai Lunas
+</button>`:""}
+
+<button class="btn-danger"
+onclick="deleteOrderById('${order.id}')">
+Hapus
+</button>
+
+</div>
+
 </div>
 `;
 
 }).join("");
 }
 
+/* AUTO SYNC ANTAR TAB */
 window.addEventListener("storage",function(e){
 if(e.key==="order_history"){
 renderOrders();
