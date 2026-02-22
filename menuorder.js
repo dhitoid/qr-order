@@ -1175,7 +1175,7 @@ if(method==="KASIR"){
 closeSheet();
 
 currentOrderData.paymentStatus="Belum Dibayar";
-currentOrderData.orderStatus="Menunggu Pembayaran di Kasir";
+currentOrderData.orderStatus="Menunggu";
 
 checkoutProgress();
 
@@ -1227,6 +1227,13 @@ if(e.key==="order_history"){
 orderHistory = JSON.parse(localStorage.getItem("order_history")||"[]");
 
 renderHistory();
+
+/* UPDATE INVOICE JIKA TERBUKA */
+let invoiceModal=document.getElementById("invoiceModal");
+
+if(invoiceModal.classList.contains("show")){
+openInvoice(0); // buka ulang invoice terbaru
+}
 
 }
 });
