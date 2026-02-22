@@ -19,14 +19,17 @@
 
 <!-- ================= HERO ================= -->
 <div class="hero">
-<div class="greeting" id="greeting">Mode Kasir</div>
+<div class="greeting">Mode Kasir</div>
 <div class="headline">Manual Order</div>
 </div>
 
 <!-- ================= SEARCH ================= -->
-<div style="padding:0 20px 10px;">
+<div class="search-wrapper">
 <input type="text" id="searchInput" class="input" placeholder="Cari menu...">
 </div>
+
+<!-- ================= CATEGORY ================= -->
+<div id="categoryContainer" class="category-container"></div>
 
 <!-- ================= MENU ================= -->
 <div id="menu"></div>
@@ -44,12 +47,11 @@
 
 <h3>Detail Order</h3>
 
-<input class="input" placeholder="Nama Pelanggan">
-<input class="input" id="phoneInput" placeholder="No HP (08xxxx)">
+<input class="input" id="customerName" placeholder="Nama Pelanggan (Opsional)">
+<input class="input" id="phoneInput" placeholder="No HP (Opsional)">
 
 <select class="input" id="paymentMethod">
-<option value="">Pilih Metode</option>
-<option value="KASIR">Bayar di Kasir</option>
+<option value="KASIR" selected>Bayar di Kasir</option>
 </select>
 
 <div id="cartItems"></div>
@@ -78,8 +80,8 @@
 </div>
 </div>
 
-<button class="checkout-btn" onclick="checkout()">
-Checkout
+<button class="checkout-btn" onclick="checkoutKasir()">
+Selesaikan Order
 </button>
 
 <br><br>
@@ -90,9 +92,8 @@ Checkout
 
 </div>
 
-<!-- ================= MENU MODAL (WAJIB ADA) ================= -->
+<!-- ================= MENU MODAL ================= -->
 <div class="menu-modal" id="menuModal">
-
 <div class="menu-modal-content">
 
 <div class="modal-handle"></div>
@@ -119,7 +120,7 @@ Tambah ke Keranjang
 </div>
 </div>
 
-<!-- Hidden container supaya JS tidak error -->
+<!-- Hidden agar JS tidak error -->
 <div style="display:none">
 <div id="orderHistoryList"></div>
 <div id="loyaltyFill"></div>
