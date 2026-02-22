@@ -245,7 +245,7 @@ successAnim.style.display="flex";
 setTimeout(()=>{
 
 currentOrderData.paymentStatus="Lunas";
-currentOrderData.orderStatus="Sedang Disiapkan";
+currentOrderData.orderStatus="Diproses";
 
 closeQrisModal();
 
