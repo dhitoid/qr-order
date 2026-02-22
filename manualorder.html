@@ -7,6 +7,8 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="menuorder.css">
+
+<!-- DATA MENU HARUS DI ATAS -->
 <script src="daftarmenu.js"></script>
 </head>
 
@@ -28,11 +30,11 @@
 <input type="text" id="searchInput" class="input" placeholder="Cari menu...">
 </div>
 
-<!-- ================= CATEGORY ================= -->
-<div id="categoryContainer" class="category-container"></div>
+<!-- ================= CATEGORY (AUTO BY JS) ================= -->
+<div id="categoryContainer" class="categories"></div>
 
 <!-- ================= MENU ================= -->
-<div id="menu"></div>
+<div id="menu" class="menu-wrapper"></div>
 
 <!-- ================= FLOATING CART ================= -->
 <div class="floating-cart" onclick="openSheet()">
@@ -57,6 +59,7 @@
 <div id="cartItems"></div>
 
 <div class="checkout-summary">
+
 <div class="summary-row">
 <span>Subtotal</span>
 <span id="subtotal">Rp 0</span>
@@ -78,6 +81,7 @@
 <span>Total</span>
 <span id="grandTotal">Rp 0</span>
 </div>
+
 </div>
 
 <button class="checkout-btn" onclick="checkoutKasir()">
@@ -120,12 +124,13 @@ Tambah ke Keranjang
 </div>
 </div>
 
-<!-- Hidden agar JS tidak error -->
+<!-- Hidden element supaya tidak error -->
 <div style="display:none">
 <div id="orderHistoryList"></div>
 <div id="loyaltyFill"></div>
 </div>
 
+<!-- SCRIPT PALING BAWAH -->
 <script src="menuorder.js"></script>
 
 </body>
