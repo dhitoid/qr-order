@@ -203,7 +203,7 @@ margin-top:50px;
 <h3>☕ Dhito Cafe</h3>
 <a href="kasir.html">🧾 Kasir</a>
 <a href="statistik.html">📊 Statistik</a>
-<a href="#">➕ Manual Order (Soon)</a>
+<a href="manualorder.html">➕ Manual Order</a>
 </div>
 
 <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
@@ -239,17 +239,6 @@ oninput="handleSearch()">
 <button onclick="setPayment('ALL',this)" class="active">Semua Pembayaran</button>
 <button onclick="setPayment('Lunas',this)">Lunas</button>
 <button onclick="setPayment('Belum Lunas',this)">Belum Lunas</button>
-</div>
-
-<div style="margin:20px 0;padding:15px;background:rgba(255,255,255,0.05);border-radius:16px;">
-<h3 style="margin-bottom:10px;">➕ Manual Order</h3>
-
-<div id="manualMenu" style="display:grid;gap:10px;"></div>
-
-<button onclick="createManualOrder()"
-style="margin-top:10px;background:#4CAF50;padding:10px;border:none;border-radius:12px;color:white;">
-Buat Order
-</button>
 </div>
 
 <div class="orders" id="orders"></div>
