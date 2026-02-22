@@ -6,233 +6,181 @@
 <title>Manual Order - Dhito Cafe</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- 🔥 PAKAI CSS YANG SAMA -->
+<link rel="stylesheet" href="menuorder.css">
+
 <script src="daftarmenu.js"></script>
-
-<style>
-:root{
---glass: rgba(255,255,255,0.08);
---blur: blur(25px);
---primary: #4CAF50;
-}
-
-body{
-margin:0;
-background:linear-gradient(135deg,#0f172a,#1e293b);
-color:white;
-font-family:'Inter',sans-serif;
-padding:20px;
-}
-
-/* ===== HEADER ===== */
-.header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:25px;
-}
-
-.header h2{
-margin:0;
-font-weight:600;
-}
-
-.back-btn{
-background:var(--glass);
-backdrop-filter:var(--blur);
-border:none;
-color:white;
-padding:8px 14px;
-border-radius:14px;
-cursor:pointer;
-transition:.2s;
-}
-
-.back-btn:hover{
-transform:translateY(-2px);
-}
-
-/* ===== MENU GRID ===== */
-.menu-grid{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-gap:15px;
-}
-
-.card{
-background:var(--glass);
-backdrop-filter:var(--blur);
-padding:15px;
-border-radius:18px;
-transition:.3s;
-}
-
-.card:hover{
-transform:translateY(-5px);
-}
-
-.card h4{
-margin:0 0 5px 0;
-font-weight:600;
-}
-
-.card p{
-font-size:12px;
-opacity:.6;
-margin:0;
-}
-
-.qty{
-display:flex;
-gap:8px;
-margin-top:12px;
-}
-
-.qty button{
-flex:1;
-border:none;
-padding:6px;
-border-radius:12px;
-cursor:pointer;
-background:rgba(255,255,255,0.15);
-color:white;
-transition:.2s;
-}
-
-.qty button:hover{
-background:rgba(255,255,255,0.25);
-}
-
-/* ===== CART ===== */
-.cart-box{
-margin-top:30px;
-background:var(--glass);
-backdrop-filter:var(--blur);
-padding:18px;
-border-radius:20px;
-}
-
-.cart-box h3{
-margin-top:0;
-}
-
-.cart-item{
-display:flex;
-justify-content:space-between;
-margin-bottom:8px;
-font-size:14px;
-}
-
-.total{
-margin-top:15px;
-font-weight:600;
-}
-
-.primary{
-margin-top:15px;
-width:100%;
-border:none;
-padding:10px;
-border-radius:16px;
-background:var(--primary);
-color:white;
-font-weight:600;
-cursor:pointer;
-transition:.2s;
-}
-
-.primary:hover{
-transform:translateY(-2px);
-}
-</style>
 </head>
-
 <body>
 
-<div class="header">
-<h2>➕ Manual Order</h2>
-<button class="back-btn" onclick="goBack()">← Kembali ke Kasir</button>
+<div class="dynamic-island" id="island">
+☕ Manual Order
+</div>
+
+<div class="hero">
+<div class="greeting">Mode Kasir</div>
+<div class="headline">Manual Order</div>
 </div>
 
 <div class="menu-grid" id="menuGrid"></div>
 
-<div class="cart-box">
-<h3>🛒 Keranjang</h3>
-<div id="cartList"></div>
-<div class="total" id="cartTotal">Total: Rp 0</div>
-<button class="primary" onclick="createOrder()">Buat Order</button>
+<!-- FLOATING CART -->
+<div class="floating-cart" onclick="openSheet()">
+🛒
+<div class="cart-count" id="cartCount">0</div>
+</div>
+
+<!-- SHEET -->
+<div class="sheet" id="sheet">
+<div class="handle"></div>
+
+<h3>Detail Order</h3>
+
+<input class="input" id="customerName" placeholder="Nama Pelanggan">
+<input class="input" id="customerPhone" placeholder="No HP">
+
+<select class="input" id="paymentMethod">
+<option value="">Pilih Metode</option>
+<option value="QRIS">QRIS</option>
+<option value="KASIR">Bayar di Kasir</option>
+</select>
+
+<div id="cartItems"></div>
+
+<div class="checkout-summary">
+<div class="summary-row">
+<span>Subtotal</span>
+<span id="subtotal">Rp 0</span>
+</div>
+
+<div class="summary-row">
+<span>Service</span>
+<span id="service">Rp 0</span>
+</div>
+
+<div class="summary-row">
+<span>Pajak</span>
+<span id="tax">Rp 0</span>
+</div>
+
+<div class="summary-divider"></div>
+
+<div class="summary-row total-row">
+<span>Total</span>
+<span id="grandTotal">Rp 0</span>
+</div>
+</div>
+
+<button class="checkout-btn" onclick="createOrder()">
+Buat Order
+</button>
+
+<br><br>
+
+<button class="btn-secondary" onclick="backToKasir()">
+⬅ Kembali ke Kasir
+</button>
+
 </div>
 
 <script>
 
 const kasirMenu = MENU_DATA;
-let cart=[];
+let cart = [];
+let island = document.getElementById("island");
 
-function goBack(){
-window.location.href="kasir.html";
-}
+/* ================= RENDER MENU ================= */
 
 function renderMenu(){
-document.getElementById("menuGrid").innerHTML=
+document.getElementById("menuGrid").innerHTML =
 kasirMenu.map(item=>`
 <div class="card">
 <h4>${item.nama}</h4>
-<p>Rp ${item.harga.toLocaleString()}</p>
-<div class="qty">
-<button onclick="changeQty('${item.nama}',-1)">−</button>
-<button onclick="changeQty('${item.nama}',1)">+</button>
-</div>
+<div class="price">Rp ${item.harga.toLocaleString()}</div>
+<button onclick="addItem('${item.nama}')">Tambah</button>
 </div>
 `).join("");
 }
 
-function changeQty(nama,delta){
+/* ================= ADD ITEM ================= */
 
-let item=kasirMenu.find(i=>i.nama===nama);
-let existing=cart.find(c=>c.nama===nama);
+function addItem(nama){
 
-if(!existing && delta>0){
-cart.push({nama:item.nama,harga:item.harga,qty:1});
-}else if(existing){
-existing.qty+=delta;
-if(existing.qty<=0)
-cart=cart.filter(c=>c.nama!==nama);
+let item = kasirMenu.find(i=>i.nama===nama);
+let existing = cart.find(c=>c.nama===nama);
+
+if(existing){
+existing.qty++;
+}else{
+cart.push({...item,qty:1});
 }
 
-renderCart();
+updateCart();
+notify("✅ "+nama+" ditambahkan","success");
 }
 
-function renderCart(){
+/* ================= UPDATE CART ================= */
 
-let subtotal=0;
+function updateCart(){
 
-document.getElementById("cartList").innerHTML=
-cart.map(i=>{
-let total=i.harga*i.qty;
-subtotal+=total;
+let subtotal = 0;
+
+document.getElementById("cartItems").innerHTML =
+cart.map((i,idx)=>{
+subtotal += i.harga*i.qty;
 return `
 <div class="cart-item">
 <span>${i.nama} (${i.qty}x)</span>
-<span>Rp ${total.toLocaleString()}</span>
-</div>`;
+<div class="qty-control">
+<button onclick="decrease(${idx})">−</button>
+<button onclick="increase(${idx})">+</button>
+</div>
+</div>
+`;
 }).join("");
 
-document.getElementById("cartTotal")
-.innerText="Total: Rp "+subtotal.toLocaleString();
+let service = subtotal*0.05;
+let tax = subtotal*0.10;
+let grand = subtotal+service+tax;
+
+document.getElementById("subtotal").innerText="Rp "+subtotal.toLocaleString();
+document.getElementById("service").innerText="Rp "+service.toLocaleString();
+document.getElementById("tax").innerText="Rp "+tax.toLocaleString();
+document.getElementById("grandTotal").innerText="Rp "+grand.toLocaleString();
+document.getElementById("cartCount").innerText=cart.reduce((a,b)=>a+b.qty,0);
 }
+
+/* ================= QTY ================= */
+
+function increase(i){cart[i].qty++;updateCart();}
+function decrease(i){
+cart[i].qty--;
+if(cart[i].qty<=0) cart.splice(i,1);
+updateCart();
+}
+
+/* ================= CREATE ORDER ================= */
 
 function createOrder(){
 
 if(cart.length===0){
-alert("Belum ada item");
+notify("Keranjang kosong","danger");
+return;
+}
+
+let method = document.getElementById("paymentMethod").value;
+if(!method){
+notify("Pilih metode pembayaran","warning");
 return;
 }
 
 let subtotal=0;
 cart.forEach(i=>subtotal+=i.harga*i.qty);
 
-let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
-let tax = subtotal * APP_CONFIG.TAX_PERCENT;
-let total = subtotal + service + tax;
+let service=subtotal*0.05;
+let tax=subtotal*0.10;
+let total=subtotal+service+tax;
 
 let orders=JSON.parse(localStorage.getItem("order_history")||"[]");
 
@@ -240,27 +188,54 @@ orders.unshift({
 id:"#ORD-"+Date.now(),
 date:new Date().toLocaleString(),
 timestamp:Date.now(),
-items:cart,
+items:[...cart],
 subtotal,
 service,
 tax,
 total,
-paymentMethod:"KASIR",
-paymentStatus:"Belum Lunas",
+paymentMethod:method,
+paymentStatus: method==="QRIS" ? "Belum Lunas" : "Belum Dibayar",
 orderStatus:"Menunggu",
-customerName:"Walk In",
-customerPhone:"-"
+customerName:document.getElementById("customerName").value||"Walk In",
+customerPhone:document.getElementById("customerPhone").value||"-"
 });
 
 localStorage.setItem("order_history",JSON.stringify(orders));
 
 cart=[];
-renderCart();
+updateCart();
 
-alert("Order berhasil dibuat!");
+notify("🎉 Order berhasil dibuat","success");
+
+}
+
+/* ================= NOTIFY ================= */
+
+function notify(text,type){
+
+island.className="dynamic-island expand "+type;
+island.innerText=text;
+
+setTimeout(()=>{
+island.className="dynamic-island";
+island.innerText="☕ Manual Order";
+},2500);
+
+}
+
+/* ================= NAVIGATION ================= */
+
+function openSheet(){
+document.getElementById("sheet").classList.add("show");
+}
+
+function backToKasir(){
+window.location.href="kasir.html";
 }
 
 renderMenu();
+updateCart();
+
 </script>
 
 </body>
