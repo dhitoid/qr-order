@@ -12,15 +12,18 @@
 </head>
 <body>
 
+<!-- DYNAMIC ISLAND -->
 <div class="dynamic-island" id="island">
 ☕ Manual Order
 </div>
 
+<!-- HERO -->
 <div class="hero">
 <div class="greeting">Mode Kasir</div>
 <div class="headline">Manual Order</div>
 </div>
 
+<!-- MENU GRID -->
 <div class="menu-grid" id="menuGrid"></div>
 
 <!-- FLOATING CART -->
@@ -29,19 +32,10 @@
 <div class="cart-count" id="cartCount">0</div>
 </div>
 
-<!-- SHEET -->
-<div class="sheet" id="sheet">
-<!-- QRIS POPUP -->
-<div class="qris-popup" id="qrisPopup">
-<div class="qris-box">
-<h3>Pembayaran QRIS</h3>
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=DhitoCafeQRIS" />
-<p id="qrisAmount"></p>
+<!-- ================= SHEET ================= -->
 
-<button onclick="confirmPayment()">Saya Sudah Bayar</button>
-<button class="btn-cancel" onclick="closeQRIS()">Batal</button>
-</div>
-</div>
+<div class="sheet" id="sheet">
+
 <div class="handle"></div>
 
 <h3>Detail Order</h3>
@@ -87,270 +81,112 @@ Buat Order
 
 <br><br>
 
-<button class="btn-secondary" onclick="backToKasir()">
+<button class="btn-secondary" onclick="window.location.href='kasir.html'">
 ⬅ Kembali ke Kasir
 </button>
 
 </div>
 
+<!-- ================= MODALS (HARUS SAMA SEPERTI INDEX) ================= -->
+
+<!-- MENU MODAL -->
+<div class="menu-modal" id="menuModal">
+  <div class="menu-modal-content">
+
+    <div class="modal-handle" onclick="closeMenuModal()"></div>
+
+    <div class="menu-modal-img" id="modalImg"></div>
+
+    <div class="menu-modal-body">
+      <h2 id="modalTitle"></h2>
+      <p id="modalDesc"></p>
+
+      <div class="topping-section">
+        <h4>Pilih Topping</h4>
+        <div class="topping-list" id="toppingList"></div>
+      </div>
+
+      <div class="modal-qty">
+        <button onclick="decreaseModal()">−</button>
+        <span id="modalQty">1</span>
+        <button onclick="increaseModal()">+</button>
+      </div>
+
+      <div class="modal-price" id="modalPrice"></div>
+
+      <button class="modal-add" id="modalAddBtn">
+        Tambah ke Keranjang
+      </button>
+
+    </div>
+  </div>
+</div>
+
+<!-- QRIS MODAL -->
+<div class="qris-modal" id="qrisModal">
+  <div class="qris-content">
+
+    <div class="modal-handle"></div>
+
+    <div class="qris-header">
+      <h3>Pembayaran QRIS</h3>
+      <button class="close-btn" onclick="cancelQris()">✕</button>
+    </div>
+
+    <div class="qris-total" id="qrisTotal"></div>
+
+    <div class="qris-box">
+
+      <div class="qris-loading" id="qrisLoading">
+        <div class="spinner"></div>
+        <p>Menghasilkan QR...</p>
+      </div>
+
+      <img id="qrisImage" />
+
+      <div class="success-animation" id="successAnim">
+        <div class="checkmark"></div>
+      </div>
+
+      <div class="qris-overlay-status" id="qrisOverlayStatus">
+        Menunggu Pembayaran
+      </div>
+
+    </div>
+
+    <div class="qris-timer">
+      Berlaku <span id="qrisTimer">180</span> detik
+    </div>
+
+    <div class="qris-buttons">
+      <button class="btn-secondary" onclick="cancelQris()">Batal</button>
+      <button class="btn-primary" onclick="downloadQris()">Unduh QR</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- INVOICE MODAL -->
+<div class="invoice-modal" id="invoiceModal">
+  <div class="invoice-content">
+    <div class="modal-handle" onclick="closeInvoice()"></div>
+    <h3>Invoice Pesanan</h3>
+    <div id="invoiceBody"></div>
+    <div class="invoice-actions">
+      <button class="btn-secondary" onclick="closeInvoice()">Tutup</button>
+      <button class="btn-primary" onclick="downloadInvoicePDF()">Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- ENGINE -->
+<script src="menuorder.js"></script>
+
 <script>
-
-const kasirMenu = MENU_DATA;
-let cart = [];
-let island = document.getElementById("island");
-
-/* ================= FORMAT NO HP ================= */
-
-const phoneInput = document.getElementById("phoneInput");
-
-phoneInput.addEventListener("input", function(e){
-
-let value = e.target.value.replace(/\D/g,'');
-
-if(value.startsWith("0")){
-value = "62" + value.substring(1);
-}
-
-value = value.substring(0,14);
-
-let formatted = "";
-
-if(value.length > 0){
-formatted = "+" + value.substring(0,2);
-}
-if(value.length > 2){
-formatted += " " + value.substring(2,5);
-}
-if(value.length > 5){
-formatted += "-" + value.substring(5,9);
-}
-if(value.length > 9){
-formatted += "-" + value.substring(9,13);
-}
-
-e.target.value = formatted;
-
+/* OPTIONAL: Ganti tulisan island default */
+document.addEventListener("DOMContentLoaded", ()=>{
+document.getElementById("island").innerText = "☕ Manual Order";
 });
-
-/* ================= RENDER MENU ================= */
-
-function renderMenu(){
-
-document.getElementById("menuGrid").innerHTML =
-kasirMenu.map(item=>`
-<div class="card">
-${item.img ? `<img src="${item.img}">` : ""}
-<h4>${item.nama}</h4>
-<div class="price">Rp ${item.harga.toLocaleString()}</div>
-<button onclick="addItem('${item.nama}')">
-Tambah
-</button>
-</div>
-`).join("");
-
-}
-
-/* ================= ADD ITEM ================= */
-
-function addItem(nama){
-
-let item = kasirMenu.find(i=>i.nama===nama);
-let existing = cart.find(c=>c.nama===nama);
-
-if(existing){
-existing.qty++;
-}else{
-cart.push({...item, qty:1});
-}
-
-updateCart();
-notify("✅ "+nama+" ditambahkan","success");
-
-}
-
-/* ================= UPDATE CART ================= */
-
-function updateCart(){
-
-let subtotal = 0;
-
-document.getElementById("cartItems").innerHTML =
-cart.map((i,idx)=>{
-
-subtotal += i.harga * i.qty;
-
-return `
-<div class="cart-item">
-<div class="cart-item-info">
-<div class="cart-item-name">${i.nama}</div>
-<div class="cart-item-price">
-Rp ${(i.harga*i.qty).toLocaleString()}
-</div>
-</div>
-<div class="qty-control">
-<button onclick="decrease(${idx})">−</button>
-<span>${i.qty}</span>
-<button onclick="increase(${idx})">+</button>
-</div>
-</div>
-`;
-}).join("");
-
-let service = subtotal * 0.05;
-let tax = subtotal * 0.10;
-let grand = subtotal + service + tax;
-
-document.getElementById("subtotal").innerText = "Rp "+subtotal.toLocaleString();
-document.getElementById("service").innerText = "Rp "+service.toLocaleString();
-document.getElementById("tax").innerText = "Rp "+tax.toLocaleString();
-document.getElementById("grandTotal").innerText = "Rp "+grand.toLocaleString();
-
-document.getElementById("cartCount").innerText =
-cart.reduce((a,b)=>a+b.qty,0);
-
-}
-
-/* ================= QTY ================= */
-
-function increase(i){
-cart[i].qty++;
-updateCart();
-}
-
-function decrease(i){
-cart[i].qty--;
-if(cart[i].qty <= 0) cart.splice(i,1);
-updateCart();
-}
-
-/* ================= CREATE ORDER ================= */
-
-function createOrder(){
-
-if(cart.length === 0){
-notify("Keranjang kosong","danger");
-return;
-}
-
-let method = document.getElementById("paymentMethod").value;
-if(!method){
-notify("Pilih metode pembayaran","warning");
-return;
-}
-
-let subtotal = 0;
-cart.forEach(i=> subtotal += i.harga * i.qty);
-
-let service = subtotal * 0.05;
-let tax     = subtotal * 0.10;
-let total   = subtotal + service + tax;
-
-let customerName = document.getElementById("customerName").value || "Walk In";
-let customerPhone = document.getElementById("phoneInput").value || "-";
-
-if(method === "QRIS" && customerPhone === "-"){
-notify("Nomor HP wajib untuk QRIS","warning");
-return;
-}
-
-window.pendingOrder = {
-id:"#ORD-"+Date.now(),
-date:new Date().toLocaleString(),
-timestamp:Date.now(),
-items:[...cart],
-subtotal,
-service,
-tax,
-total,
-paymentMethod:method,
-paymentStatus: method === "QRIS" ? "Menunggu Pembayaran" : "Lunas",
-orderStatus:"Menunggu",
-customerName,
-customerPhone
-};
-
-if(method === "QRIS"){
-
-document.getElementById("qrisAmount")
-.innerText = "Total: Rp " + total.toLocaleString();
-
-document.getElementById("qrisPopup")
-.classList.add("show");
-
-notify("Scan QR untuk pembayaran","info");
-
-return;
-}
-
-finalizeOrder();
-
-}
-
-/* ================= FINALIZE ================= */
-
-function finalizeOrder(){
-
-let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
-
-orders.unshift(window.pendingOrder);
-
-localStorage.setItem("order_history", JSON.stringify(orders));
-
-cart = [];
-updateCart();
-closeSheet();
-
-notify("🎉 Order masuk ke kasir","success");
-
-}
-
-/* ================= QRIS ================= */
-
-function confirmPayment(){
-
-window.pendingOrder.paymentStatus = "Lunas";
-window.pendingOrder.orderStatus = "Diproses";
-
-finalizeOrder();
-closeQRIS();
-
-notify("💳 Pembayaran berhasil","success");
-
-}
-
-function closeQRIS(){
-document.getElementById("qrisPopup").classList.remove("show");
-}
-
-/* ================= UI ================= */
-
-function notify(text,type){
-
-island.className = "dynamic-island expand "+type;
-island.innerText = text;
-
-setTimeout(()=>{
-island.className="dynamic-island";
-island.innerText="☕ Manual Order";
-},2500);
-
-}
-
-function openSheet(){
-document.getElementById("sheet").classList.add("show");
-}
-
-function closeSheet(){
-document.getElementById("sheet").classList.remove("show");
-}
-
-function backToKasir(){
-window.location.href="kasir.html";
-}
-
-renderMenu();
-updateCart();
-
 </script>
 
 </body>
