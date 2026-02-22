@@ -1117,20 +1117,28 @@ setCheckoutLoading(false);
 return;
 }
 
-currentOrderData={
-id:generateOrderNumber(),
-date:new Date().toLocaleString(),
-timestamp : Date.now(),
-items:[...cart],
-subtotal,
-service,
-tax,
-total:grand,
-paymentMethod:method,
-paymentStatus: method==="QRIS" ? "Menunggu Pembayaran" : "Belum Dibayar",
-orderStatus: "Diproses",
-customerName:name,
-customerPhone:phone
+currentOrderData = {
+  id: generateOrderNumber(),
+  date: new Date().toLocaleString(),
+  timestamp: Date.now(),
+
+  items: [...cart],
+
+  subtotal,
+  service,
+  tax,
+  total: grand,
+
+  paymentMethod: method,
+
+  paymentStatus: method === "QRIS"
+    ? "Belum Lunas"
+    : "Belum Lunas",
+
+  orderStatus: "Menunggu",
+
+  customerName: name,
+  customerPhone: phone
 };
 
 /* ================= MINI PROCESSING UI ================= */
