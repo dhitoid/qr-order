@@ -164,31 +164,66 @@ cursor:pointer;
 .unpaid{background:#f59e0b;color:black}
 .reset{background:#ef4444;color:white}
 
-/* ===== Success Animation ===== */
+/* ===== Apple Style Success ===== */
 .success{
 position:fixed;
 inset:0;
-background:rgba(0,0,0,.7);
 display:flex;
 justify-content:center;
 align-items:center;
+background:rgba(0,0,0,.6);
+backdrop-filter:blur(10px);
 opacity:0;
 pointer-events:none;
-transition:.3s;
+transition:.4s ease;
 }
+
 .success.show{
 opacity:1;
 pointer-events:auto;
 }
+
+.success-card{
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(30px);
+padding:40px 50px;
+border-radius:30px;
+text-align:center;
+transform:scale(.8);
+opacity:0;
+transition:.4s cubic-bezier(.34,1.56,.64,1);
+}
+
+.success.show .success-card{
+transform:scale(1);
+opacity:1;
+}
+
 .check{
-width:80px;
-height:80px;
+width:90px;
+height:90px;
 border-radius:50%;
-background:#22c55e;
+background:linear-gradient(135deg,#22c55e,#16a34a);
 display:flex;
 justify-content:center;
 align-items:center;
-font-size:40px;
+font-size:45px;
+margin:auto;
+box-shadow:0 10px 40px rgba(34,197,94,.6);
+animation:pop .5s ease;
+}
+
+@keyframes pop{
+0%{transform:scale(.5)}
+60%{transform:scale(1.2)}
+100%{transform:scale(1)}
+}
+
+.success-text{
+margin-top:15px;
+font-size:15px;
+font-weight:600;
+opacity:.9;
 }
 </style>
 </head>
@@ -196,7 +231,7 @@ font-size:40px;
 
 <div class="island" id="island"></div>
 
-<h2>➕ Manual Order (Walk In)</h2>
+<h2>☕️ Menu Order (Walk In)</h2>
 
 <div class="grid" id="menuGrid"></div>
 
@@ -206,6 +241,7 @@ font-size:40px;
 <div class="total" id="totalText">Total: Rp 0</div>
 
 <div class="cash-input">
+<input id="customerName" placeholder="Nama Konsumen (Opsional)">
 <input id="cashInput" placeholder="Masukkan uang bayar" oninput="formatCash()">
 </div>
 
@@ -226,14 +262,18 @@ font-size:40px;
 </div>
 
 <div class="success" id="success">
-<div class="check">✓</div>
+  <div class="success-card">
+    <div class="check">✓</div>
+    <div class="success-text" id="successText">
+      Pembayaran Berhasil
+    </div>
+  </div>
 </div>
 
 <script>
 let cart=[];
 let lastTotal=0;
 
-/* ===== Island ===== */
 /* ===== Island Advanced ===== */
 function showIsland(message, showProgress=false){
 
@@ -380,8 +420,7 @@ let interval=setInterval(()=>{
 progress+=20;
 document.getElementById("progressFill").style.width=progress+"%";
 
-if(progress>=100){
-clearInterval(interval);
+let customer = document.getElementById("customerName").value || "Walk In";
 
 let orders=getOrders();
 orders.unshift({
@@ -396,20 +435,26 @@ total:lastTotal,
 paymentMethod:"KASIR",
 paymentStatus:paid?"Lunas":"Belum Lunas",
 orderStatus:paid?"Diproses":"Menunggu",
-customerName:"Walk In",
+customerName:customer,
 customerPhone:"-"
 });
 saveOrders(orders);
 
 if(paid){
+
+document.getElementById("successText")
+.innerText="Pembayaran berhasil\n"+customer;
+
 document.getElementById("success").classList.add("show");
+
 setTimeout(()=>{
 document.getElementById("success").classList.remove("show");
-},1200);
+},1600);
 
-showIsland("Pembayaran berhasil ✅");
+showIsland("Transaksi sukses • "+customer);
+
 }else{
-showIsland("Order dibuat");
+showIsland("Order dibuat • "+customer);
 }
 
 setTimeout(()=>{
@@ -425,6 +470,7 @@ resetCart();
 /* ===== Reset ===== */
 function resetCart(){
 cart=[];
+document.getElementById("customerName").value="";
 document.getElementById("cashInput").value="";
 updateQty();
 renderCart();
