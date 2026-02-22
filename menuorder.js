@@ -450,7 +450,10 @@ document.getElementById("menu")
 
 /* close dropdown jika klik luar */
 document.addEventListener("click",()=>{
-document.getElementById("categoryDropdown").classList.remove("show");
+let dropdown = document.getElementById("categoryDropdown");
+if(dropdown){
+  dropdown.classList.remove("show");
+}
 });
 
 function toggleTopping(nama){
