@@ -1,47 +1,14 @@
 document.addEventListener("DOMContentLoaded", function(){
-
-/* ================= MODE ================= */
-const MODE = document.body.dataset.mode || "customer";
-
-/* ================= SAFE DOM HELPER ================= */
-function el(id){
-  return document.getElementById(id);
-}
-
-function exists(id){
-  return !!document.getElementById(id);
-}
-
-/* ================= SAFE QUERY ================= */
-function qs(selector){
-  return document.querySelector(selector);
-}
-
-/* ================= ELEMENT CACHE (SAFE) ================= */
-const island = el("island");
-const menuEl = el("menu");
-const sheet = el("sheet");
-const cartCount = el("cartCount");
-const modal = el("menuModal");
-
-/* ================= GLOBAL STATE ================= */
-let cart = JSON.parse(localStorage.getItem("dhito_cart") || "[]");
-let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
-let points = parseInt(localStorage.getItem("dhito_points") || 0);
-
-let filter = "all";
-let searchQuery = "";
-let paymentLock = false;
-let currentOrderData = null;
-
-let selectedToppings = [];
-let modalQty = 1;
-
-let showAllHistory = false;
-let modalStartY = 0;
-let lastScroll = 0;
-let islandForceShow = false;
-let islandHidden = false;
+const island=document.getElementById("island");
+const menuEl=document.getElementById("menu");
+const sheet=document.getElementById("sheet");
+const cartCount=document.getElementById("cartCount");
+const modal=document.getElementById("menuModal");
+const modalImg=document.getElementById("modalImg");
+const modalTitle=document.getElementById("modalTitle");
+const modalDesc=document.getElementById("modalDesc");
+const modalPrice=document.getElementById("modalPrice");
+const modalAddBtn=document.getElementById("modalAddBtn");
 
 async function downloadInvoicePDF(){
 
@@ -125,16 +92,27 @@ modalAddBtn.onclick=()=>addToCartWithTopping(item);
 modal.classList.add("show");
 }
 
-if(modal){
 modal.addEventListener("click",(e)=>{
 if(e.target===modal){
 modal.classList.remove("show");
 }
 });
-}
+
+let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
+let filter="all";
+let selectedToppings=[];
+let modalQty = 1;
+let searchQuery="";
+let paymentLock = false;
+let showAllHistory = false;
+let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
+let modalStartY=0;
+let lastScroll = 0;
+let islandForceShow = false;
+let islandHidden = false;
 
 window.addEventListener("scroll", ()=>{
-if(!island) return;
+
 let currentScroll = window.scrollY;
 let delta = currentScroll - lastScroll;
 
@@ -177,6 +155,7 @@ lastScroll = currentScroll;
 
 let qrisInterval=null;
 let qrisTimeout=null;
+let currentOrderData=null;
 let qrisStatus="idle";
 
 function startQris(total){
@@ -374,13 +353,11 @@ document.body.removeChild(link);
 notify("📥 QR berhasil diunduh","success");
 }
 
-let searchEl = document.getElementById("searchInput");
-if(searchEl){
-  searchEl.addEventListener("input",(e)=>{
-    searchQuery = e.target.value.toLowerCase();
-    render();
-  });
-}
+document.getElementById("searchInput")
+.addEventListener("input",(e)=>{
+searchQuery=e.target.value.toLowerCase();
+render();
+});
 
 window.addEventListener("scroll",()=>{
 
@@ -450,10 +427,7 @@ document.getElementById("menu")
 
 /* close dropdown jika klik luar */
 document.addEventListener("click",()=>{
-let dropdown = document.getElementById("categoryDropdown");
-if(dropdown){
-  dropdown.classList.remove("show");
-}
+document.getElementById("categoryDropdown").classList.remove("show");
 });
 
 function toggleTopping(nama){
@@ -635,8 +609,6 @@ document.getElementById("invoiceModal").classList.remove("show");
 
 function render(){
 
-if(!menuEl) return;
-
 menuEl.innerHTML="";
 
 let filtered=data.filter(d=>{
@@ -790,7 +762,7 @@ updateCart();
 }
 
 function updateCart(){
-if(!document.getElementById("cartItems")) return;
+
 let subtotal=0;
 
 document.getElementById("cartItems").innerHTML=
@@ -928,10 +900,7 @@ function openSheet(){sheet.classList.add("show")}
 function closeSheet(){sheet.classList.remove("show")}
 
 /* CLOSE VIA HANDLE TAP */
-let handle = document.querySelector(".handle");
-if(handle){
-  handle.addEventListener("click", closeSheet);
-}
+document.querySelector(".handle").addEventListener("click",closeSheet);
 
 /* SWIPE DOWN TO CLOSE */
 let startY=0;
@@ -971,10 +940,11 @@ island.style.transform="translateX(-50%) scale(1)";
 islandForceShow = false;
 }
 
+let points=parseInt(localStorage.getItem("dhito_points")||0);
+
 function updateLoyalty(){
-if(!exists("loyaltyFill")) return;
-let percent = (points % 100);
-el("loyaltyFill").style.width = percent+"%";
+let percent=(points%100);
+document.getElementById("loyaltyFill").style.width=percent+"%";
 }
 
 function confettiEffect(){
@@ -1002,9 +972,7 @@ renderHistory();
 
 function renderHistory(){
 
-if(!exists("orderHistoryList")) return;
-
-let container = document.getElementById("orderHistoryList");
+let container=document.getElementById("orderHistoryList");
 
 if(orderHistory.length===0){
 container.innerHTML="<p style='opacity:.5;font-size:13px;'>Belum ada pesanan.</p>";
@@ -1207,123 +1175,12 @@ return;
 },900);
 }
 
-function finalizeKasirPayment(){
-
-currentOrderData.paymentStatus="Dibayar";
-currentOrderData.orderStatus="Selesai";
-
-/* simpan ke history */
-let history = JSON.parse(localStorage.getItem("dhito_orders") || "[]");
-history.unshift(currentOrderData);
-localStorage.setItem("dhito_orders", JSON.stringify(history));
-
-/* reset cart */
-cart = [];
-updateCart();
-
-paymentLock = false;
-setCheckoutLoading(false);
-
-/* reset island */
-island.classList.remove("expand","payment");
-island.innerHTML="☕ Dhito Cafe";
-islandForceShow = false;
-
-showIsland("Order berhasil ✅");
-
-}
-
-function checkoutKasir(){
-
-if(paymentLock) return;
-
-if(cart.length===0){
-notify("Keranjang kosong","danger");
-return;
-}
-
-paymentLock = true;
-setCheckoutLoading(true);
-
-/* ================= HITUNG TOTAL ================= */
-
-let subtotal=0;
-cart.forEach(i=>{
-subtotal+=i.harga*i.qty;
-});
-
-let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
-let tax = subtotal * APP_CONFIG.TAX_PERCENT;
-let grand=subtotal+service+tax;
-
-let method="KASIR";
-let name=document.getElementById("customerName")?.value || "-";
-let phone=document.getElementById("phoneInput")?.value || "-";
-
-/* ================= BUILD ORDER ================= */
-
-currentOrderData = {
-  id: generateOrderNumber(),
-  date: new Date().toLocaleString(),
-  timestamp: Date.now(),
-
-  items: [...cart],
-
-  subtotal,
-  service,
-  tax,
-  total: grand,
-
-  paymentMethod: method,
-  paymentStatus: "Belum Dibayar",
-  orderStatus: "Menunggu",
-
-  customerName: name,
-  customerPhone: phone,
-  mode: "kasir"
-};
-
-/* ================= MINI PROCESSING UI ================= */
-
-islandForceShow = true;
-island.classList.add("expand","payment");
-island.innerHTML=`
-🧾 Memproses Order
-<div class="island-status">
-Menyimpan transaksi...
-</div>
-`;
-
-closeSheet();
-
-/* Delay animasi */
-setTimeout(()=>{
-
-checkoutProgress();
-
-/* Delay lagi supaya smooth */
-setTimeout(()=>{
-
-finalizeKasirPayment();
-
-},2000);
-
-},900);
-
-}
-
 /* ================= INIT ================= */
 
 updateLoyalty();
 updateCart();
-
-if(typeof renderHistory === "function"){
-  renderHistory();
-}
-
-if(typeof render === "function"){
-  render();
-}
+renderHistory();
+render();
 
 /* ================= EXPOSE GLOBAL FUNCTIONS ================= */
 
