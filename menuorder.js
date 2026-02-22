@@ -1,14 +1,47 @@
 document.addEventListener("DOMContentLoaded", function(){
-const island=document.getElementById("island");
-const menuEl=document.getElementById("menu");
-const sheet=document.getElementById("sheet");
-const cartCount=document.getElementById("cartCount");
-const modal=document.getElementById("menuModal");
-const modalImg=document.getElementById("modalImg");
-const modalTitle=document.getElementById("modalTitle");
-const modalDesc=document.getElementById("modalDesc");
-const modalPrice=document.getElementById("modalPrice");
-const modalAddBtn=document.getElementById("modalAddBtn");
+
+/* ================= MODE ================= */
+const MODE = document.body.dataset.mode || "customer";
+
+/* ================= SAFE DOM HELPER ================= */
+function el(id){
+  return document.getElementById(id);
+}
+
+function exists(id){
+  return !!document.getElementById(id);
+}
+
+/* ================= SAFE QUERY ================= */
+function qs(selector){
+  return document.querySelector(selector);
+}
+
+/* ================= ELEMENT CACHE (SAFE) ================= */
+const island = el("island");
+const menuEl = el("menu");
+const sheet = el("sheet");
+const cartCount = el("cartCount");
+const modal = el("menuModal");
+
+/* ================= GLOBAL STATE ================= */
+let cart = JSON.parse(localStorage.getItem("dhito_cart") || "[]");
+let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
+let points = parseInt(localStorage.getItem("dhito_points") || 0);
+
+let filter = "all";
+let searchQuery = "";
+let paymentLock = false;
+let currentOrderData = null;
+
+let selectedToppings = [];
+let modalQty = 1;
+
+let showAllHistory = false;
+let modalStartY = 0;
+let lastScroll = 0;
+let islandForceShow = false;
+let islandHidden = false;
 
 async function downloadInvoicePDF(){
 
@@ -92,27 +125,16 @@ modalAddBtn.onclick=()=>addToCartWithTopping(item);
 modal.classList.add("show");
 }
 
+if(modal){
 modal.addEventListener("click",(e)=>{
 if(e.target===modal){
 modal.classList.remove("show");
 }
 });
-
-let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
-let filter="all";
-let selectedToppings=[];
-let modalQty = 1;
-let searchQuery="";
-let paymentLock = false;
-let showAllHistory = false;
-let orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
-let modalStartY=0;
-let lastScroll = 0;
-let islandForceShow = false;
-let islandHidden = false;
+}
 
 window.addEventListener("scroll", ()=>{
-
+if(!island) return;
 let currentScroll = window.scrollY;
 let delta = currentScroll - lastScroll;
 
@@ -155,7 +177,6 @@ lastScroll = currentScroll;
 
 let qrisInterval=null;
 let qrisTimeout=null;
-let currentOrderData=null;
 let qrisStatus="idle";
 
 function startQris(total){
@@ -353,11 +374,13 @@ document.body.removeChild(link);
 notify("📥 QR berhasil diunduh","success");
 }
 
-document.getElementById("searchInput")
-.addEventListener("input",(e)=>{
-searchQuery=e.target.value.toLowerCase();
-render();
-});
+let searchEl = document.getElementById("searchInput");
+if(searchEl){
+  searchEl.addEventListener("input",(e)=>{
+    searchQuery = e.target.value.toLowerCase();
+    render();
+  });
+}
 
 window.addEventListener("scroll",()=>{
 
@@ -609,6 +632,8 @@ document.getElementById("invoiceModal").classList.remove("show");
 
 function render(){
 
+if(!menuEl) return;
+
 menuEl.innerHTML="";
 
 let filtered=data.filter(d=>{
@@ -762,7 +787,7 @@ updateCart();
 }
 
 function updateCart(){
-
+if(!document.getElementById("cartItems")) return;
 let subtotal=0;
 
 document.getElementById("cartItems").innerHTML=
@@ -900,7 +925,10 @@ function openSheet(){sheet.classList.add("show")}
 function closeSheet(){sheet.classList.remove("show")}
 
 /* CLOSE VIA HANDLE TAP */
-document.querySelector(".handle").addEventListener("click",closeSheet);
+let handle = document.querySelector(".handle");
+if(handle){
+  handle.addEventListener("click", closeSheet);
+}
 
 /* SWIPE DOWN TO CLOSE */
 let startY=0;
@@ -940,11 +968,10 @@ island.style.transform="translateX(-50%) scale(1)";
 islandForceShow = false;
 }
 
-let points=parseInt(localStorage.getItem("dhito_points")||0);
-
 function updateLoyalty(){
-let percent=(points%100);
-document.getElementById("loyaltyFill").style.width=percent+"%";
+if(!exists("loyaltyFill")) return;
+let percent = (points % 100);
+el("loyaltyFill").style.width = percent+"%";
 }
 
 function confettiEffect(){
@@ -972,7 +999,9 @@ renderHistory();
 
 function renderHistory(){
 
-let container=document.getElementById("orderHistoryList");
+if(!exists("orderHistoryList")) return;
+
+let container = document.getElementById("orderHistoryList");
 
 if(orderHistory.length===0){
 container.innerHTML="<p style='opacity:.5;font-size:13px;'>Belum ada pesanan.</p>";
@@ -1179,8 +1208,14 @@ return;
 
 updateLoyalty();
 updateCart();
-renderHistory();
-render();
+
+if(typeof renderHistory === "function"){
+  renderHistory();
+}
+
+if(typeof render === "function"){
+  render();
+}
 
 /* ================= EXPOSE GLOBAL FUNCTIONS ================= */
 
