@@ -2,205 +2,203 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dhito Cafe - Kasir</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Dhito Cafe - Kasir Mode</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="menuorder.css">
 
 <style>
 body{
-margin:0;
-font-family:'Inter',sans-serif;
 background:#0f172a;
-color:white;
 }
-
-header{
+.pos-header{
 padding:20px;
-font-size:20px;
 font-weight:700;
+font-size:18px;
+text-align:center;
 background:rgba(255,255,255,0.05);
 backdrop-filter:blur(20px);
-position:sticky;
-top:0;
-z-index:10;
 }
-
-.container{
-padding:20px;
-}
-
-.order-card{
-background:rgba(255,255,255,0.06);
-backdrop-filter:blur(20px);
-padding:18px;
-border-radius:18px;
-margin-bottom:18px;
-transition:0.3s;
-}
-
-.order-card:hover{
-transform:scale(1.02);
-}
-
-.order-header{
-display:flex;
-justify-content:space-between;
-font-size:14px;
-opacity:0.8;
-}
-
-.order-items{
-margin:10px 0;
-font-size:13px;
-line-height:1.6;
-}
-
-.order-total{
-font-weight:700;
-margin-top:8px;
-}
-
-.badge{
-padding:4px 10px;
-border-radius:12px;
-font-size:12px;
-}
-
-.lunas{background:#16a34a;}
-.belum{background:#f59e0b;}
-.selesai{background:#3b82f6;}
-.menunggu{background:#ef4444;}
-
-.btn-group{
-margin-top:10px;
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-}
-
-button{
-border:none;
-padding:8px 12px;
-border-radius:10px;
-cursor:pointer;
-font-size:12px;
-font-weight:600;
-}
-
-.btn-process{background:#3b82f6;color:white;}
-.btn-done{background:#22c55e;color:white;}
-.btn-paid{background:#16a34a;color:white;}
-.btn-print{background:#6366f1;color:white;}
-
-.empty{
-opacity:0.5;
-font-size:14px;
+.checkout-btn{
+background:#16a34a !important;
 }
 </style>
 </head>
 
 <body>
 
-<header>☕ Dhito Cafe — Kasir Panel</header>
-
-<div class="container">
-<div id="orderList"></div>
+<div class="pos-header">
+🖥 Kasir Mode — Dhito Cafe
 </div>
+
+<div class="search-container">
+<input type="text" id="searchInput" placeholder="Cari menu...">
+</div>
+
+<div class="categories">
+<button onclick="filterMenu('all',this)" class="active">Semua</button>
+<button onclick="filterMenu('makanan',this)">Makanan</button>
+<button onclick="filterMenu('minuman',this)">Minuman</button>
+<button onclick="filterMenu('cemilan',this)">Cemilan</button>
+<button onclick="filterMenu('promo',this)">Promo</button>
+</div>
+
+<div class="menu-grid" id="menu"></div>
+
+<div class="floating-cart" onclick="openSheet()">
+🛒
+<div class="cart-count" id="cartCount">0</div>
+</div>
+
+<div class="sheet" id="sheet">
+<div class="handle"></div>
+
+<h3>Detail Pesanan (Kasir)</h3>
+<div id="cartItems"></div>
+
+<div class="checkout-summary">
+<div class="summary-row">
+<span>Subtotal</span>
+<span id="subtotal"></span>
+</div>
+<div class="summary-row">
+<span>Service (5%)</span>
+<span id="service"></span>
+</div>
+<div class="summary-row">
+<span>Pajak (10%)</span>
+<span id="tax"></span>
+</div>
+
+<div class="summary-divider"></div>
+
+<div class="summary-row total-row">
+<span>Total</span>
+<span id="grandTotal"></span>
+</div>
+</div>
+
+<button class="checkout-btn" onclick="checkoutManual()">
+Bayar & Cetak
+</button>
+
+</div>
+
+<div class="menu-modal" id="menuModal">
+<div class="menu-modal-content">
+
+<div class="modal-handle" onclick="closeMenuModal()"></div>
+
+<div class="menu-modal-img" id="modalImg"></div>
+
+<div class="menu-modal-body">
+<h2 id="modalTitle"></h2>
+<p id="modalDesc"></p>
+
+<div class="topping-section">
+<h4>Pilih Topping</h4>
+<div class="topping-list" id="toppingList"></div>
+</div>
+
+<div class="modal-qty">
+<button onclick="decreaseModal()">−</button>
+<span id="modalQty">1</span>
+<button onclick="increaseModal()">+</button>
+</div>
+
+<div class="modal-price" id="modalPrice"></div>
+
+<button class="modal-add" id="modalAddBtn">
+Tambah ke Keranjang
+</button>
+
+</div>
+</div>
+</div>
+
+<div class="invoice-modal" id="invoiceModal">
+<div class="invoice-content">
+<div class="modal-handle" onclick="closeInvoice()"></div>
+<h3>Invoice</h3>
+<div id="invoiceBody"></div>
+</div>
+</div>
+
+<script src="daftarmenu.js"></script>
 
 <script>
 
+const data = MENU_DATA;
+const toppingsData = TOPPINGS_DATA;
+
+let cart=[];
+let selectedToppings=[];
+let modalQty=1;
 let orderHistory = JSON.parse(localStorage.getItem("order_history")||"[]");
 
-function renderOrders(){
+/* ===== RENDER MENU ===== */
 
-let container=document.getElementById("orderList");
+function render(){
+let menu=document.getElementById("menu");
+menu.innerHTML=data.map(d=>`
+<div class="card" onclick="openMenuDetail('${d.nama}')">
+<img src="${d.img}">
+<h4>${d.nama}</h4>
+<div class="price">Rp ${d.harga.toLocaleString()}</div>
+</div>
+`).join("");
+}
 
-if(orderHistory.length===0){
-container.innerHTML="<div class='empty'>Belum ada pesanan masuk.</div>";
+render();
+
+/* ===== CHECKOUT MANUAL ===== */
+
+function checkoutManual(){
+
+if(cart.length===0){
+alert("Keranjang kosong");
 return;
 }
 
-container.innerHTML = orderHistory.map((order,index)=>{
+let subtotal=0;
+cart.forEach(i=>subtotal+=i.harga*i.qty);
 
-let items = order.items.map(i=>
-`${i.nama} (${i.qty}x)`
-).join("<br>");
+let service=subtotal*0.05;
+let tax=subtotal*0.1;
+let total=subtotal+service+tax;
 
-return `
-<div class="order-card">
+let order={
+id:"#POS-"+Date.now(),
+date:new Date().toLocaleString(),
+items:[...cart],
+subtotal,
+service,
+tax,
+total,
+paymentMethod:"KASIR",
+paymentStatus:"Lunas",
+orderStatus:"Selesai",
+customerName:"Walk In",
+customerPhone:"-"
+};
 
-<div class="order-header">
-<span>${order.id}</span>
-<span>${order.date}</span>
-</div>
+orderHistory.unshift(order);
+localStorage.setItem("order_history",JSON.stringify(orderHistory));
 
-<div class="order-items">
-${items}
-</div>
+cart=[];
+updateCart();
 
-<div class="order-total">
-Total: Rp ${order.total.toLocaleString()}
-</div>
+openInvoice(order);
 
-<div style="margin-top:6px;">
-<span class="badge ${order.paymentStatus==="Lunas"?"lunas":"belum"}">
-${order.paymentStatus}
-</span>
-
-<span class="badge ${order.orderStatus==="Selesai"?"selesai":"menunggu"}">
-${order.orderStatus}
-</span>
-</div>
-
-<div class="btn-group">
-
-<button class="btn-process"
-onclick="updateStatus(${index},'Diproses')">
-Proses
-</button>
-
-<button class="btn-done"
-onclick="updateStatus(${index},'Selesai')">
-Selesai
-</button>
-
-<button class="btn-paid"
-onclick="markPaid(${index})">
-Tandai Lunas
-</button>
-
-<button class="btn-print"
-onclick="printInvoice(${index})">
-Print
-</button>
-
-</div>
-
-</div>
-`;
-
-}).join("");
 }
 
-function updateStatus(index,status){
-orderHistory[index].orderStatus=status;
-saveOrders();
-}
+/* ===== OPEN INVOICE ===== */
 
-function markPaid(index){
-orderHistory[index].paymentStatus="Lunas";
-saveOrders();
-}
+function openInvoice(order){
 
-function printInvoice(index){
-
-let order=orderHistory[index];
-
-let win=window.open("","PRINT","height=600,width=400");
-
-win.document.write(`
-<h2>Dhito Cafe</h2>
-<p>${order.id}</p>
+document.getElementById("invoiceBody").innerHTML=`
+<p><strong>${order.id}</strong></p>
 <p>${order.date}</p>
 <hr>
 ${order.items.map(i=>
@@ -208,28 +206,46 @@ ${order.items.map(i=>
 ).join("")}
 <hr>
 <p>Total: Rp ${order.total.toLocaleString()}</p>
-`);
+`;
 
-win.document.close();
-win.print();
+document.getElementById("invoiceModal").classList.add("show");
 }
 
-function saveOrders(){
-localStorage.setItem("order_history",JSON.stringify(orderHistory));
-renderOrders();
+function closeInvoice(){
+document.getElementById("invoiceModal").classList.remove("show");
 }
 
-/* AUTO SYNC DENGAN MENUORDER */
-window.addEventListener("storage", function(e){
+/* ===== CART BASIC ===== */
 
-if(e.key==="order_history"){
-orderHistory = JSON.parse(localStorage.getItem("order_history")||"[]");
-renderOrders();
+function openMenuDetail(n){
+let item=data.find(d=>d.nama===n);
+cart.push({nama:item.nama,harga:item.harga,qty:1});
+updateCart();
 }
 
-});
+function updateCart(){
+let subtotal=0;
+document.getElementById("cartItems").innerHTML=
+cart.map(i=>{
+subtotal+=i.harga*i.qty;
+return `<div>${i.nama} (${i.qty}x)</div>`;
+}).join("");
 
-renderOrders();
+let service=subtotal*0.05;
+let tax=subtotal*0.1;
+let total=subtotal+service+tax;
+
+document.getElementById("subtotal").innerText="Rp "+subtotal.toLocaleString();
+document.getElementById("service").innerText="Rp "+service.toLocaleString();
+document.getElementById("tax").innerText="Rp "+tax.toLocaleString();
+document.getElementById("grandTotal").innerText="Rp "+total.toLocaleString();
+document.getElementById("cartCount").innerText=
+cart.reduce((a,b)=>a+b.qty,0);
+}
+
+function openSheet(){
+document.getElementById("sheet").classList.add("show");
+}
 
 </script>
 
