@@ -17,88 +17,70 @@ color:white;
 padding:20px;
 }
 
-/* ================= DYNAMIC NOTIF ================= */
-
-.dynamic-island{
+/* ===== Dynamic Island ===== */
+.island{
 position:fixed;
-top:20px;
+top:15px;
 left:50%;
-transform:translateX(-50%) translateY(-120%);
-background:rgba(0,0,0,0.75);
-backdrop-filter:blur(25px);
-padding:14px 20px;
+transform:translateX(-50%) translateY(-20px);
+background:rgba(0,0,0,0.8);
+backdrop-filter:blur(20px);
+padding:10px 20px;
 border-radius:30px;
-font-size:13px;
 font-weight:600;
-transition:.4s cubic-bezier(.68,-0.6,.32,1.6);
-z-index:9999;
 opacity:0;
+transition:.4s cubic-bezier(.77,0,.18,1);
+z-index:9999;
 }
-
-.dynamic-island.show{
-transform:translateX(-50%) translateY(0);
+.island.show{
 opacity:1;
+transform:translateX(-50%) translateY(0);
 }
 
-/* ================= UI ================= */
-
-h2{margin-bottom:15px}
-
+/* ===== Menu Grid ===== */
 .grid{
 display:grid;
 grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-gap:12px;
+gap:14px;
+margin-top:50px;
 }
 
 .menu-card{
-background:rgba(255,255,255,0.07);
+background:rgba(255,255,255,0.06);
 padding:14px;
-border-radius:18px;
-backdrop-filter:blur(15px);
-display:flex;
-flex-direction:column;
-justify-content:space-between;
-min-height:120px;
-transition:.2s;
+border-radius:20px;
+backdrop-filter:blur(20px);
+transition:.3s;
 }
-
 .menu-card:hover{
-transform:scale(1.03);
+transform:translateY(-3px);
 }
 
-.menu-card h4{
-font-size:14px;
-margin-bottom:6px;
-}
+.menu-card h4{font-size:14px}
+.menu-card small{opacity:.6;font-size:12px}
 
-.menu-card small{
-opacity:.6;
-font-size:12px;
-}
-
-.qty-control{
-margin-top:10px;
+.qty{
 display:flex;
 justify-content:space-between;
-align-items:center;
+margin-top:10px;
 }
-
-.qty-control button{
-border:none;
+.qty button{
 background:#3b82f6;
+border:none;
 color:white;
 width:28px;
 height:28px;
 border-radius:8px;
-cursor:pointer;
 }
 
-.cart-box{
-margin-top:25px;
+/* ===== Cart ===== */
+.cart{
+margin-top:30px;
 background:rgba(255,255,255,0.06);
-padding:18px;
-border-radius:20px;
-backdrop-filter:blur(20px);
+padding:20px;
+border-radius:25px;
+backdrop-filter:blur(25px);
+box-shadow:0 10px 30px rgba(0,0,0,.3);
 }
 
 .cart-item{
@@ -109,295 +91,296 @@ margin-bottom:6px;
 }
 
 .total{
-margin-top:12px;
+margin-top:10px;
 font-weight:700;
 font-size:15px;
 }
 
+/* ===== Payment UI ===== */
+.cash-input{
+margin-top:15px;
+}
+
+.cash-input input{
+width:100%;
+padding:12px;
+border-radius:14px;
+border:none;
+outline:none;
+font-size:14px;
+background:rgba(255,255,255,0.1);
+color:white;
+}
+
+.quick{
+display:flex;
+gap:8px;
+margin-top:10px;
+flex-wrap:wrap;
+}
+.quick button{
+padding:6px 10px;
+border:none;
+border-radius:12px;
+background:#334155;
+color:white;
+font-size:12px;
+}
+
+.change{
+margin-top:10px;
+font-weight:600;
+}
+
 .btn{
-margin-top:12px;
+margin-top:15px;
 width:100%;
 padding:14px;
 border:none;
-border-radius:16px;
+border-radius:18px;
 font-weight:600;
 cursor:pointer;
 }
 
-.btn-primary{
+.pay{background:#22c55e;color:white}
+.unpaid{background:#f59e0b;color:black}
+.reset{background:#ef4444;color:white}
+
+/* ===== Success Animation ===== */
+.success{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.7);
+display:flex;
+justify-content:center;
+align-items:center;
+opacity:0;
+pointer-events:none;
+transition:.3s;
+}
+.success.show{
+opacity:1;
+pointer-events:auto;
+}
+.check{
+width:80px;
+height:80px;
+border-radius:50%;
 background:#22c55e;
-color:white;
-}
-
-.btn-secondary{
-background:#ef4444;
-color:white;
-}
-
-input{
-width:100%;
-padding:12px;
-border-radius:12px;
-border:none;
-margin-top:5px;
-font-size:14px;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:40px;
 }
 </style>
 </head>
 <body>
 
-<div class="dynamic-island" id="notif"></div>
+<div class="island" id="island"></div>
 
 <h2>➕ Manual Order (Walk In)</h2>
 
 <div class="grid" id="menuGrid"></div>
 
-<div class="cart-box">
+<div class="cart">
 <h3>Keranjang</h3>
 <div id="cartItems"></div>
+<div class="total" id="totalText">Total: Rp 0</div>
 
-<div class="total" id="cartTotal">Total: Rp 0</div>
-
-<div style="margin-top:15px">
-<label style="font-size:13px;opacity:.7">Uang Bayar</label>
-<input type="text" id="cashInput" placeholder="Masukkan nominal"
-oninput="formatRupiah(this);calculateChange()">
+<div class="cash-input">
+<input id="cashInput" placeholder="Masukkan uang bayar" oninput="formatCash()">
 </div>
 
-<div style="margin-top:10px;font-weight:600" id="changeOutput">
-Kembalian: Rp 0
+<div class="quick">
+<button onclick="setNominal(10000)">10k</button>
+<button onclick="setNominal(20000)">20k</button>
+<button onclick="setNominal(50000)">50k</button>
+<button onclick="setNominal(100000)">100k</button>
+<button onclick="setNominal(lastTotal)">Uang Pas</button>
 </div>
 
-<button class="btn btn-primary" onclick="processPayment()">
-Bayar & Proses
-</button>
+<div class="change" id="changeText">Kembalian: Rp 0</div>
 
-<button class="btn btn-secondary" onclick="resetCart()">
-Reset
-</button>
+<button class="btn pay" onclick="processPayment(true)">Bayar & Lunas</button>
+<button class="btn unpaid" onclick="processPayment(false)">Buat (Belum Lunas)</button>
+<button class="btn reset" onclick="resetCart()">Reset</button>
+</div>
 
-<button class="btn" style="background:#3b82f6"
-onclick="window.location.href='kasir.html'">
-⬅ Kembali ke Menu Kasir
-</button>
+<div class="success" id="success">
+<div class="check">✓</div>
 </div>
 
 <script>
-
-/* ================= DATA ================= */
-
 let cart=[];
 let lastTotal=0;
 
-/* ================= NOTIF ================= */
-
-function showNotif(text){
-let notif=document.getElementById("notif");
-notif.innerText=text;
-notif.classList.add("show");
-
-setTimeout(()=>{
-notif.classList.remove("show");
-},2500);
+/* ===== Island ===== */
+function showIsland(text){
+let island=document.getElementById("island");
+island.innerText=text;
+island.classList.add("show");
+setTimeout(()=>island.classList.remove("show"),2500);
 }
 
-/* ================= FORMAT RUPIAH ================= */
-
-function formatRupiah(input){
-let number=input.value.replace(/\D/g,'');
-input.value=new Intl.NumberFormat('id-ID').format(number);
-}
-
-function getCashValue(){
-return parseInt(document.getElementById("cashInput").value.replace(/\D/g,''))||0;
-}
-
-/* ================= HITUNG ================= */
-
-function calculateChange(){
-let cash=getCashValue();
-let change=cash-lastTotal;
-let output=document.getElementById("changeOutput");
-
-if(change<0){
-output.innerText="Uang kurang: Rp "+Math.abs(change).toLocaleString();
-output.style.color="#ef4444";
-}else{
-output.innerText="Kembalian: Rp "+change.toLocaleString();
-output.style.color="#22c55e";
-}
-}
-
-/* ================= PAYMENT ================= */
-
-function processPayment(){
-
-if(cart.length===0){
-showNotif("Keranjang kosong ❌");
-return;
-}
-
-let cash=getCashValue();
-if(cash<lastTotal){
-showNotif("Uang belum cukup ❌");
-return;
-}
-
-showNotif("Memproses pembayaran...");
-
-setTimeout(()=>{
-saveOrder();
-printStruk();
-showNotif("Pembayaran berhasil ✅");
-resetCart();
-},1200);
-
-}
-
-/* ================= SAVE ORDER ================= */
-
-function saveOrder(){
-
-let subtotal=0;
-cart.forEach(i=>subtotal+=i.harga*i.qty);
-
-let service=subtotal*0.05;
-let tax=subtotal*0.10;
-let total=subtotal+service+tax;
-
-let orders=JSON.parse(localStorage.getItem("order_history")||"[]");
-
-orders.unshift({
-id:"#ORD-"+Date.now(),
-date:new Date().toLocaleString(),
-items:[...cart],
-subtotal,service,tax,total,
-paymentStatus:"Lunas"
-});
-
-localStorage.setItem("order_history",JSON.stringify(orders));
-}
-
-/* ================= PRINT STRUK ================= */
-
-function printStruk(){
-
-let struk=`
-=== DHITO CAFE ===
-${new Date().toLocaleString()}
------------------------
-`;
-
-cart.forEach(i=>{
-struk+=`${i.nama} x${i.qty}
-Rp ${(i.harga*i.qty).toLocaleString()}
-`;
-});
-
-struk+=`
------------------------
-Total: Rp ${lastTotal.toLocaleString()}
-Bayar: Rp ${getCashValue().toLocaleString()}
-Kembali: Rp ${(getCashValue()-lastTotal).toLocaleString()}
-=======================
-Terima Kasih
-`;
-
-let win=window.open('','','width=300,height=600');
-win.document.write('<pre>'+struk+'</pre>');
-win.print();
-win.close();
-
-}
-
-/* ================= MENU ================= */
-
+/* ===== Menu ===== */
 function renderMenu(){
-let container=document.getElementById("menuGrid");
-container.innerHTML=MENU_DATA.map(item=>`
+let grid=document.getElementById("menuGrid");
+grid.innerHTML=MENU_DATA.map(item=>`
 <div class="menu-card">
-<div>
 <h4>${item.nama}</h4>
 <small>Rp ${item.harga.toLocaleString()}</small>
-</div>
-<div class="qty-control">
+<div class="qty">
 <button onclick="changeQty('${item.nama}',-1)">-</button>
-<span id="qty-${item.nama.replace(/\s/g,'')}">0</span>
+<span id="q-${item.nama.replace(/\s/g,'')}">0</span>
 <button onclick="changeQty('${item.nama}',1)">+</button>
 </div>
 </div>
 `).join("");
 }
 
-function changeQty(nama,delta){
-
+function changeQty(nama,d){
 let item=MENU_DATA.find(i=>i.nama===nama);
-let existing=cart.find(c=>c.nama===nama);
-
-if(!existing && delta>0){
-cart.push({nama:item.nama,harga:item.harga,qty:1});
-}else if(existing){
-existing.qty+=delta;
-if(existing.qty<=0){
-cart=cart.filter(c=>c.nama!==nama);
+let ex=cart.find(c=>c.nama===nama);
+if(!ex&&d>0)cart.push({nama:item.nama,harga:item.harga,qty:1});
+else if(ex){
+ex.qty+=d;
+if(ex.qty<=0)cart=cart.filter(c=>c.nama!==nama);
 }
-}
-
-updateQtyDisplay();
+updateQty();
 renderCart();
 }
 
-function updateQtyDisplay(){
-MENU_DATA.forEach(item=>{
-let el=document.getElementById("qty-"+item.nama.replace(/\s/g,''));
-let found=cart.find(c=>c.nama===item.nama);
-el.innerText=found?found.qty:0;
+function updateQty(){
+MENU_DATA.forEach(i=>{
+let el=document.getElementById("q-"+i.nama.replace(/\s/g,''));
+let f=cart.find(c=>c.nama===i.nama);
+el.innerText=f?f.qty:0;
 });
 }
 
+/* ===== Cart ===== */
 function renderCart(){
-
-let container=document.getElementById("cartItems");
-
+let el=document.getElementById("cartItems");
 if(cart.length===0){
-container.innerHTML="<small>Belum ada item</small>";
-document.getElementById("cartTotal").innerText="Total: Rp 0";
-lastTotal=0;
+el.innerHTML="Belum ada item";
+document.getElementById("totalText").innerText="Total: Rp 0";
 return;
 }
-
-let subtotal=0;
-
-container.innerHTML=cart.map(i=>{
-subtotal+=i.harga*i.qty;
+let sub=0;
+el.innerHTML=cart.map(i=>{
+sub+=i.harga*i.qty;
 return `<div class="cart-item">
 <span>${i.nama} (${i.qty}x)</span>
 <span>Rp ${(i.harga*i.qty).toLocaleString()}</span>
 </div>`;
 }).join("");
-
-let service=subtotal*0.05;
-let tax=subtotal*0.10;
-let total=subtotal+service+tax;
-
-lastTotal=total;
+let service=sub*0.05;
+let tax=sub*0.10;
+lastTotal=sub+service+tax;
+document.getElementById("totalText")
+.innerText="Total: Rp "+lastTotal.toLocaleString();
 calculateChange();
-
-document.getElementById("cartTotal")
-.innerText="Total: Rp "+total.toLocaleString();
 }
 
+/* ===== Format Rupiah ===== */
+function formatCash(){
+let input=document.getElementById("cashInput");
+let num=input.value.replace(/\D/g,"");
+input.value=num? "Rp "+parseInt(num).toLocaleString():"";
+calculateChange();
+}
+function getCash(){
+return parseInt(document.getElementById("cashInput")
+.value.replace(/\D/g,""))||0;
+}
+function setNominal(val){
+document.getElementById("cashInput")
+.value="Rp "+val.toLocaleString();
+calculateChange();
+}
+
+/* ===== Change ===== */
+function calculateChange(){
+let cash=getCash();
+let change=cash-lastTotal;
+let el=document.getElementById("changeText");
+if(change<0){
+el.innerText="Uang kurang: Rp "+Math.abs(change).toLocaleString();
+el.style.color="#ef4444";
+}else{
+el.innerText="Kembalian: Rp "+change.toLocaleString();
+el.style.color="#22c55e";
+}
+}
+
+/* ===== Storage ===== */
+function getOrders(){
+return JSON.parse(localStorage.getItem("order_history")||"[]");
+}
+function saveOrders(d){
+localStorage.setItem("order_history",JSON.stringify(d));
+}
+
+/* ===== Payment Process ===== */
+function processPayment(paid){
+
+if(cart.length===0){
+showIsland("Keranjang kosong");
+return;
+}
+
+if(paid && getCash()<lastTotal){
+showIsland("Uang belum cukup");
+return;
+}
+
+showIsland("Memproses pembayaran...");
+
+setTimeout(()=>{
+
+let orders=getOrders();
+orders.unshift({
+id:"#ORD-"+Date.now(),
+date:new Date().toLocaleString(),
+timestamp:Date.now(),
+items:[...cart],
+subtotal:lastTotal,
+service:0,
+tax:0,
+total:lastTotal,
+paymentMethod:"KASIR",
+paymentStatus:paid?"Lunas":"Belum Lunas",
+orderStatus:paid?"Diproses":"Menunggu",
+customerName:"Walk In",
+customerPhone:"-"
+});
+saveOrders(orders);
+
+if(paid){
+document.getElementById("success").classList.add("show");
+setTimeout(()=>{
+document.getElementById("success").classList.remove("show");
+},1500);
+showIsland("Pembayaran berhasil ✅");
+}else{
+showIsland("Order dibuat");
+}
+
+resetCart();
+
+},1500);
+}
+
+/* ===== Reset ===== */
 function resetCart(){
 cart=[];
 document.getElementById("cashInput").value="";
-updateQtyDisplay();
+updateQty();
 renderCart();
 }
 
-/* INIT */
 renderMenu();
 renderCart();
-
 </script>
 
 </body>
