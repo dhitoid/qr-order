@@ -14,7 +14,67 @@ body{
 background:linear-gradient(135deg,#0f172a,#1e293b);
 color:white;
 padding:20px;
+overflow-x:hidden;
 }
+
+/* ================= SIDEBAR ================= */
+
+.sidebar{
+position:fixed;
+top:0;
+left:-260px;
+width:240px;
+height:100%;
+background:rgba(255,255,255,0.06);
+backdrop-filter:blur(25px);
+padding:20px;
+transition:.35s cubic-bezier(.77,0,.18,1);
+z-index:9999;
+box-shadow:20px 0 40px rgba(0,0,0,.5);
+}
+
+.sidebar.active{
+left:0;
+}
+
+.sidebar h3{
+margin-bottom:20px;
+}
+
+.sidebar a{
+display:block;
+padding:12px;
+border-radius:14px;
+text-decoration:none;
+color:white;
+font-size:13px;
+margin-bottom:10px;
+background:rgba(255,255,255,0.05);
+transition:.25s;
+}
+
+.sidebar a:hover{
+background:#3b82f6;
+transform:translateX(5px);
+}
+
+/* overlay */
+.overlay{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.5);
+backdrop-filter:blur(4px);
+opacity:0;
+pointer-events:none;
+transition:.3s;
+}
+
+.overlay.active{
+opacity:1;
+pointer-events:auto;
+}
+
+/* ================= HEADER ================= */
 
 .header{
 display:flex;
@@ -29,12 +89,15 @@ justify-content:space-between;
 align-items:center;
 }
 
-.header h2{font-size:20px}
-
-.search-container{
-display:flex;
-justify-content:center;
+.menu-btn{
+font-size:20px;
+cursor:pointer;
+background:rgba(255,255,255,0.1);
+padding:8px 14px;
+border-radius:12px;
 }
+
+.header h2{font-size:18px}
 
 #searchInput{
 width:100%;
@@ -47,17 +110,9 @@ font-size:14px;
 background:rgba(255,255,255,0.08);
 backdrop-filter:blur(20px);
 color:#fff;
-box-shadow:
-inset 0 0 0 1px rgba(255,255,255,0.1),
-0 10px 30px rgba(0,0,0,0.3);
-transition:.3s;
 }
 
-#searchInput:focus{
-box-shadow:
-inset 0 0 0 1px #4f9cff,
-0 10px 30px rgba(79,156,255,0.4);
-}
+/* ================= FILTER ================= */
 
 .filter-group{
 display:flex;
@@ -80,6 +135,8 @@ font-size:12px;
 background:#4CAF50;
 }
 
+/* ================= ORDER ================= */
+
 .orders{
 display:grid;
 gap:15px;
@@ -95,19 +152,6 @@ transition:.3s;
 
 .order-card:hover{
 transform:translateY(-3px);
-}
-
-.order-header{
-display:flex;
-justify-content:space-between;
-font-size:13px;
-opacity:.8;
-margin-bottom:8px;
-}
-
-.order-total{
-font-weight:700;
-margin-top:8px;
 }
 
 .badge{
@@ -154,41 +198,35 @@ margin-top:50px;
 </head>
 <body>
 
-<div class="header">
-
-<div class="header-top">
-  <h2>☕ Dhito Cafe - Kasir</h2>
-
-  <div style="display:flex;gap:10px;align-items:center;">
-    <a href="statistik.html" 
-       style="background:#3b82f6;padding:8px 14px;
-       border-radius:14px;text-decoration:none;
-       color:white;font-size:12px;">
-       📊 Statistik
-    </a>
-
-    <div id="totalOrders"></div>
-  </div>
+<div class="sidebar" id="sidebar">
+<h3>☕ Dhito Cafe</h3>
+<a href="kasir.html">🧾 Kasir</a>
+<a href="statistik.html">📊 Statistik</a>
+<a href="#">➕ Manual Order (Soon)</a>
 </div>
 
-<div class="search-container">
-<input 
-type="text"
-id="searchInput"
+<div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+<div class="header">
+<div class="header-top">
+<div style="display:flex;align-items:center;gap:10px;">
+<div class="menu-btn" onclick="toggleSidebar()">☰</div>
+<h2>Kasir</h2>
+</div>
+<div id="totalOrders"></div>
+</div>
+
+<input type="text" id="searchInput"
 placeholder="Cari nama / no hp / order id..."
 oninput="handleSearch()">
 </div>
 
-</div>
-
-<!-- FILTER METODE -->
 <div class="filter-group" id="methodFilter">
 <button onclick="setMethod('ALL',this)" class="active">Semua Metode</button>
 <button onclick="setMethod('QRIS',this)">QRIS</button>
 <button onclick="setMethod('KASIR',this)">Kasir</button>
 </div>
 
-<!-- FILTER STATUS ORDER -->
 <div class="filter-group" id="statusFilter">
 <button onclick="setStatus('ALL',this)" class="active">Semua Status</button>
 <button onclick="setStatus('Menunggu',this)">Menunggu</button>
@@ -196,7 +234,6 @@ oninput="handleSearch()">
 <button onclick="setStatus('Selesai',this)">Selesai</button>
 </div>
 
-<!-- FILTER STATUS BAYAR -->
 <div class="filter-group" id="paymentFilter">
 <button onclick="setPayment('ALL',this)" class="active">Semua Pembayaran</button>
 <button onclick="setPayment('Lunas',this)">Lunas</button>
@@ -206,6 +243,14 @@ oninput="handleSearch()">
 <div class="orders" id="orders"></div>
 
 <script>
+
+/* SIDEBAR */
+function toggleSidebar(){
+document.getElementById("sidebar").classList.toggle("active");
+document.getElementById("overlay").classList.toggle("active");
+}
+
+/* ================= LOGIC LAMA ================= */
 
 let methodFilter="ALL";
 let statusFilter="ALL";
@@ -219,8 +264,6 @@ return JSON.parse(localStorage.getItem("order_history")||"[]");
 function saveOrders(data){
 localStorage.setItem("order_history",JSON.stringify(data));
 }
-
-/* FILTER SETTERS */
 
 function setMethod(val,el){
 methodFilter=val;
@@ -246,65 +289,30 @@ document.querySelectorAll("#"+groupId+" button")
 el.classList.add("active");
 }
 
-/* SEARCH */
-
 function handleSearch(){
-searchKeyword=document
-.getElementById("searchInput")
+searchKeyword=document.getElementById("searchInput")
 .value.toLowerCase().trim();
 renderOrders();
 }
-
-/* UPDATE */
-
-function updateStatusById(id,status){
-let orders=getOrders();
-let order=orders.find(o=>o.id===id);
-if(!order)return;
-order.orderStatus=status;
-saveOrders(orders);
-renderOrders();
-}
-
-function markPaidById(id){
-let orders=getOrders();
-let order=orders.find(o=>o.id===id);
-if(!order)return;
-order.paymentStatus="Lunas";
-order.orderStatus="Diproses";
-saveOrders(orders);
-renderOrders();
-}
-
-function deleteOrderById(id){
-let orders=getOrders();
-orders=orders.filter(o=>o.id!==id);
-saveOrders(orders);
-renderOrders();
-}
-
-/* RENDER */
 
 function renderOrders(){
 
 let orders=getOrders();
 
-/* METHOD FILTER */
+/* SORT TERBARU */
+orders = orders
+.slice()
+.sort((a,b)=> new Date(b.timestamp) - new Date(a.timestamp));
+
 if(methodFilter!=="ALL"){
 orders=orders.filter(o=>o.paymentMethod===methodFilter);
 }
-
-/* STATUS FILTER */
 if(statusFilter!=="ALL"){
 orders=orders.filter(o=>o.orderStatus===statusFilter);
 }
-
-/* PAYMENT FILTER */
 if(paymentFilter!=="ALL"){
 orders=orders.filter(o=>o.paymentStatus===paymentFilter);
 }
-
-/* SEARCH */
 if(searchKeyword){
 orders=orders.filter(o=>
 (o.customerName||"").toLowerCase().includes(searchKeyword)||
@@ -314,7 +322,7 @@ orders=orders.filter(o=>
 }
 
 document.getElementById("totalOrders")
-.innerText="Total: "+orders.length+" order";
+.innerText="Total: "+orders.length;
 
 let container=document.getElementById("orders");
 
@@ -323,7 +331,6 @@ container.innerHTML="<div class='empty'>Tidak ada data ditemukan</div>";
 return;
 }
 
-orders = orders.slice().reverse();
 container.innerHTML=orders.map(order=>{
 
 let items=order.items.map(x=>
@@ -338,20 +345,19 @@ if(order.orderStatus==="Selesai")statusClass="done";
 
 return `
 <div class="order-card">
-
-<div class="order-header">
+<div style="display:flex;justify-content:space-between;font-size:13px;opacity:.8;">
 <span>${order.id}</span>
 <span>${order.date}</span>
 </div>
 
-<div style="font-size:13px;opacity:.8;margin-bottom:6px;">
+<div style="margin:8px 0;font-size:13px;">
 <strong>${order.customerName||"-"}</strong><br>
 ${order.customerPhone||"-"}
 </div>
 
 <div style="font-size:13px;">${items}</div>
 
-<div class="order-total">
+<div style="font-weight:700;margin-top:8px;">
 Rp ${order.total.toLocaleString()}
 </div>
 
@@ -359,44 +365,16 @@ Rp ${order.total.toLocaleString()}
 <span class="badge ${paymentBadge}">
 ${order.paymentStatus}
 </span>
-
 <span class="badge ${statusClass}">
 ${order.orderStatus}
 </span>
 </div>
-
-<div class="actions">
-
-<button class="btn-info"
-onclick="updateStatusById('${order.id}','Diproses')">
-Proses
-</button>
-
-<button class="btn-primary"
-onclick="updateStatusById('${order.id}','Selesai')">
-Selesai
-</button>
-
-${order.paymentMethod==="KASIR"&&order.paymentStatus!=="Lunas"
-? `<button class="btn-warning"
-onclick="markPaidById('${order.id}')">
-Tandai Lunas
-</button>`:""}
-
-<button class="btn-danger"
-onclick="deleteOrderById('${order.id}')">
-Hapus
-</button>
-
-</div>
-
 </div>
 `;
 
 }).join("");
 }
 
-/* AUTO SYNC ANTAR TAB */
 window.addEventListener("storage",function(e){
 if(e.key==="order_history"){
 renderOrders();
