@@ -9,11 +9,12 @@
 <link rel="stylesheet" href="menuorder.css">
 <script src="daftarmenu.js"></script>
 </head>
+
 <body data-mode="kasir">
 
 <!-- ================= DYNAMIC ISLAND ================= -->
 <div class="dynamic-island" id="island">
-☕ Manual Order
+☕ Dhito Cafe
 </div>
 
 <!-- ================= HERO ================= -->
@@ -43,12 +44,11 @@
 
 <h3>Detail Order</h3>
 
-<input class="input" id="customerName" placeholder="Nama Pelanggan">
+<input class="input" placeholder="Nama Pelanggan">
 <input class="input" id="phoneInput" placeholder="No HP (08xxxx)">
 
 <select class="input" id="paymentMethod">
 <option value="">Pilih Metode</option>
-<option value="QRIS">QRIS</option>
 <option value="KASIR">Bayar di Kasir</option>
 </select>
 
@@ -78,49 +78,51 @@
 </div>
 </div>
 
-<button class="checkout-btn" onclick="createOrder()">
-Buat Order
+<button class="checkout-btn" onclick="checkout()">
+Checkout
 </button>
 
 <br><br>
 
-<button class="btn-secondary" onclick="backToKasir()">
-⬅ Kembali ke Kasir
+<button class="btn-secondary" onclick="window.location.href='index.html'">
+⬅ Kembali
 </button>
 
 </div>
 
-<!-- ================= QRIS POPUP ================= -->
-<div class="qris-modal" id="qrisPopup">
-<div class="qris-content">
+<!-- ================= MENU MODAL (WAJIB ADA) ================= -->
+<div class="menu-modal" id="menuModal">
+
+<div class="menu-modal-content">
 
 <div class="modal-handle"></div>
 
-<div class="qris-header">
-<h3>Pembayaran QRIS</h3>
-<button class="close-btn" onclick="closeQRIS()">✕</button>
+<div class="modal-image" id="modalImg"></div>
+
+<h3 id="modalTitle"></h3>
+<p id="modalDesc"></p>
+
+<div class="modal-price" id="modalPrice"></div>
+
+<div id="toppingList"></div>
+
+<div class="qty-control">
+<button onclick="decreaseModal()">−</button>
+<span id="modalQty">1</span>
+<button onclick="increaseModal()">+</button>
 </div>
 
-<div class="qris-total" id="qrisAmount"></div>
-
-<div class="qris-box">
-<img id="qrisImage" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=DhitoCafeQRIS">
-</div>
-
-<div class="qris-buttons">
-<button class="btn-secondary" onclick="closeQRIS()">Batal</button>
-<button class="btn-primary" onclick="confirmPayment()">Konfirmasi Bayar</button>
-</div>
+<button class="checkout-btn" id="modalAddBtn">
+Tambah ke Keranjang
+</button>
 
 </div>
 </div>
 
-<!-- ================= HISTORY & LOYALTY (WAJIB ADA UNTUK JS) ================= -->
+<!-- Hidden container supaya JS tidak error -->
 <div style="display:none">
 <div id="orderHistoryList"></div>
-<div class="loyalty-bar">
-<div class="loyalty-fill" id="loyaltyFill"></div>
-</div>
+<div id="loyaltyFill"></div>
 </div>
 
 <script src="menuorder.js"></script>
