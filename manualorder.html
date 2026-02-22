@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual Order - Dhito Cafe</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+
+<style>
+body{
+margin:0;
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
+font-family:'Inter',sans-serif;
+padding:20px;
+}
+
+h2{margin-bottom:20px}
+
+.menu-grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+gap:15px;
+}
+
+.card{
+background:rgba(255,255,255,0.07);
+padding:15px;
+border-radius:18px;
+backdrop-filter:blur(15px);
+transition:.3s;
+}
+
+.card:hover{transform:translateY(-4px)}
+
+.card h4{margin:0 0 5px 0}
+
+.card p{font-size:12px;opacity:.6}
+
+.qty{
+display:flex;
+gap:6px;
+margin-top:10px;
+}
+
+button{
+border:none;
+padding:6px 10px;
+border-radius:12px;
+cursor:pointer;
+}
+
+.primary{background:#4CAF50;color:white}
+
+.cart-box{
+margin-top:25px;
+background:rgba(255,255,255,0.08);
+padding:15px;
+border-radius:18px;
+}
+</style>
+</head>
+<body>
+
+<h2>➕ Manual Order</h2>
+
+<div class="menu-grid" id="menuGrid"></div>
+
+<div class="cart-box">
+<h3>🛒 Keranjang</h3>
+<div id="cartList"></div>
+<h4 id="cartTotal">Total: Rp 0</h4>
+<button class="primary" onclick="createOrder()">Buat Order</button>
+</div>
+
+<script>
+
+const kasirMenu = MENU_DATA;
+let cart=[];
+
+function renderMenu(){
+document.getElementById("menuGrid").innerHTML=
+kasirMenu.map(item=>`
+<div class="card">
+<h4>${item.nama}</h4>
+<p>Rp ${item.harga.toLocaleString()}</p>
+<div class="qty">
+<button onclick="changeQty('${item.nama}',-1)">-</button>
+<button onclick="changeQty('${item.nama}',1)">+</button>
+</div>
+</div>
+`).join("");
+}
+
+function changeQty(nama,delta){
+
+let item=kasirMenu.find(i=>i.nama===nama);
+let existing=cart.find(c=>c.nama===nama);
+
+if(!existing && delta>0){
+cart.push({nama:item.nama,harga:item.harga,qty:1});
+}else if(existing){
+existing.qty+=delta;
+if(existing.qty<=0)
+cart=cart.filter(c=>c.nama!==nama);
+}
+
+renderCart();
+}
+
+function renderCart(){
+
+let subtotal=0;
+
+document.getElementById("cartList").innerHTML=
+cart.map(i=>{
+subtotal+=i.harga*i.qty;
+return `${i.nama} (${i.qty}x)<br>`;
+}).join("");
+
+document.getElementById("cartTotal")
+.innerText="Total: Rp "+subtotal.toLocaleString();
+}
+
+function createOrder(){
+
+if(cart.length===0){
+alert("Belum ada item");
+return;
+}
+
+let subtotal=0;
+cart.forEach(i=>subtotal+=i.harga*i.qty);
+
+let service=subtotal*0.05;
+let tax=subtotal*0.10;
+let total=subtotal+service+tax;
+
+let orders=JSON.parse(localStorage.getItem("order_history")||"[]");
+
+orders.unshift({
+id:"#ORD-"+Date.now(),
+date:new Date().toLocaleString(),
+timestamp:Date.now(),
+items:cart,
+subtotal,
+service,
+tax,
+total,
+paymentMethod:"KASIR",
+paymentStatus:"Belum Lunas",
+orderStatus:"Menunggu",
+customerName:"Walk In",
+customerPhone:"-"
+});
+
+localStorage.setItem("order_history",JSON.stringify(orders));
+
+cart=[];
+renderCart();
+alert("Order berhasil dibuat");
+}
+
+renderMenu();
+</script>
+
+</body>
+</html>
