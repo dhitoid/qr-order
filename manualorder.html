@@ -184,31 +184,60 @@ if(cart[i].qty<=0) cart.splice(i,1);
 updateCart();
 }
 
+function finalizeOrder(){
+
+let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
+
+orders.unshift(window.pendingOrder);
+
+localStorage.setItem("order_history", JSON.stringify(orders));
+
+// Reset
+cart = [];
+updateCart();
+
+window.pendingOrder = null;
+
+notify("🎉 Order berhasil dibuat","success");
+}
+
 /* ================= CREATE ORDER ================= */
 
 function createOrder(){
 
-if(cart.length===0){
+// 1️⃣ VALIDASI KERANJANG
+if(cart.length === 0){
 notify("Keranjang kosong","danger");
 return;
 }
 
+// 2️⃣ VALIDASI METODE
 let method = document.getElementById("paymentMethod").value;
 if(!method){
 notify("Pilih metode pembayaran","warning");
 return;
 }
 
-let subtotal=0;
-cart.forEach(i=>subtotal+=i.harga*i.qty);
+// 3️⃣ HITUNG TOTAL
+let subtotal = 0;
+cart.forEach(i => subtotal += i.harga * i.qty);
 
-let service=subtotal*0.05;
-let tax=subtotal*0.10;
-let total=subtotal+service+tax;
+let service = subtotal * 0.05;
+let tax     = subtotal * 0.10;
+let total   = subtotal + service + tax;
 
-let orders=JSON.parse(localStorage.getItem("order_history")||"[]");
+// 4️⃣ AMBIL DATA CUSTOMER
+let customerName  = document.getElementById("customerName").value || "Walk In";
+let customerPhone = document.getElementById("customerPhone").value || "-";
 
-orders.unshift({
+// 5️⃣ VALIDASI NOMOR (JIKA QRIS)
+if(method === "QRIS" && customerPhone === "-"){
+notify("Nomor HP wajib untuk QRIS","warning");
+return;
+}
+
+// 6️⃣ SIMPAN KE PENDING (BELUM DISAVE)
+window.pendingOrder = {
 id:"#ORD-"+Date.now(),
 date:new Date().toLocaleString(),
 timestamp:Date.now(),
@@ -218,18 +247,28 @@ service,
 tax,
 total,
 paymentMethod:method,
-paymentStatus: method==="QRIS" ? "Belum Lunas" : "Belum Dibayar",
+paymentStatus: method === "QRIS" ? "Menunggu Pembayaran" : "Lunas",
 orderStatus:"Menunggu",
-customerName:document.getElementById("customerName").value||"Walk In",
-customerPhone:document.getElementById("customerPhone").value||"-"
-});
+customerName,
+customerPhone
+};
 
-localStorage.setItem("order_history",JSON.stringify(orders));
+// 7️⃣ JIKA QRIS → TAMPILKAN POPUP
+if(method === "QRIS"){
 
-cart=[];
-updateCart();
+document.getElementById("qrisAmount")
+.innerText = "Total: Rp " + total.toLocaleString();
 
-notify("🎉 Order berhasil dibuat","success");
+document.getElementById("qrisPopup")
+.classList.add("show");
+
+notify("Scan QR untuk pembayaran","warning");
+
+return;
+}
+
+// 8️⃣ JIKA BAYAR DI KASIR → LANGSUNG SIMPAN
+finalizeOrder();
 
 }
 
@@ -265,7 +304,15 @@ notify("💳 Pembayaran Berhasil","success");
 }
 
 function confirmPayment(){
-saveOrder("Lunas");
+
+window.pendingOrder.paymentStatus = "Lunas";
+window.pendingOrder.orderStatus = "Diproses";
+
+finalizeOrder();
+
+closeQRIS();
+
+notify("💳 Pembayaran Berhasil","success");
 }
 
 function closeQRIS(){
