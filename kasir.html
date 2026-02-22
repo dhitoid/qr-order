@@ -6,6 +6,7 @@
 <title>Dhito Cafe - Sistem Kasir</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="daftarmenu.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
@@ -263,12 +264,7 @@ document.getElementById("overlay").classList.toggle("active");
 
 /* ================= MENU DATA ================= */
 
-const kasirMenu=[
-{nama:"Nasi Goreng",harga:25000,kategori:"makanan"},
-{nama:"Es Kopi",harga:18000,kategori:"minuman"},
-{nama:"Kentang",harga:15000,kategori:"cemilan"},
-{nama:"Paket Hemat",harga:45000,kategori:"promo"}
-];
+const kasirMenu = MENU_DATA;
 
 /* ================= CART ================= */
 
