@@ -240,6 +240,17 @@ oninput="handleSearch()">
 <button onclick="setPayment('Belum Lunas',this)">Belum Lunas</button>
 </div>
 
+<div style="margin:20px 0;padding:15px;background:rgba(255,255,255,0.05);border-radius:16px;">
+<h3 style="margin-bottom:10px;">➕ Manual Order</h3>
+
+<div id="manualMenu" style="display:grid;gap:10px;"></div>
+
+<button onclick="createManualOrder()"
+style="margin-top:10px;background:#4CAF50;padding:10px;border:none;border-radius:12px;color:white;">
+Buat Order
+</button>
+</div>
+
 <div class="orders" id="orders"></div>
 
 <script>
@@ -446,6 +457,78 @@ Hapus
 }).join("");
 }
 
+function renderManualMenu(){
+
+let container=document.getElementById("manualMenu");
+
+container.innerHTML=kasirMenu.map(item=>`
+<div style="display:flex;justify-content:space-between;background:rgba(255,255,255,0.08);padding:8px 12px;border-radius:12px;">
+<span>${item.nama}</span>
+<button onclick="addManual('${item.nama}')">Tambah</button>
+</div>
+`).join("");
+
+}
+
+function addManual(nama){
+
+let item=kasirMenu.find(i=>i.nama===nama);
+
+let existing=manualCart.find(c=>c.nama===nama);
+
+if(existing){
+existing.qty++;
+}else{
+manualCart.push({
+nama:item.nama,
+harga:item.harga,
+qty:1
+});
+}
+
+alert(nama+" ditambahkan");
+}
+
+function createManualOrder(){
+
+if(manualCart.length===0){
+alert("Belum ada item");
+return;
+}
+
+let subtotal=0;
+manualCart.forEach(i=>subtotal+=i.harga*i.qty);
+
+let service=subtotal*0.05;
+let tax=subtotal*0.10;
+let total=subtotal+service+tax;
+
+let orders=getOrders();
+
+let newOrder={
+id:"#ORD-"+Date.now(),
+date:new Date().toLocaleString(),
+timestamp:Date.now(),
+items:manualCart,
+subtotal,
+service,
+tax,
+total,
+paymentMethod:"KASIR",
+paymentStatus:"Belum Lunas",
+orderStatus:"Menunggu",
+customerName:"Walk In",
+customerPhone:"-"
+};
+
+orders.unshift(newOrder);
+saveOrders(orders);
+
+manualCart=[];
+renderOrders();
+alert("Order berhasil dibuat");
+}
+
 /* AUTO SYNC ANTAR TAB */
 window.addEventListener("storage",function(e){
 if(e.key==="order_history"){
@@ -454,7 +537,7 @@ renderOrders();
 });
 
 renderOrders();
-
+renderManualMenu();
 </script>
 
 </body>
