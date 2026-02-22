@@ -33,12 +33,25 @@
 
 <!-- SHEET -->
 <div class="sheet" id="sheet">
+<!-- QRIS POPUP -->
+<div class="qris-popup" id="qrisPopup">
+<div class="qris-box">
+<h3>Pembayaran QRIS</h3>
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=DhitoCafeQRIS" />
+<p id="qrisAmount"></p>
+
+<button onclick="confirmPayment()">Saya Sudah Bayar</button>
+<button class="btn-cancel" onclick="closeQRIS()">Batal</button>
+</div>
+</div>
 <div class="handle"></div>
 
 <h3>Detail Order</h3>
 
 <input class="input" id="customerName" placeholder="Nama Pelanggan">
-<input class="input" id="customerPhone" placeholder="No HP">
+<input class="input" id="customerPhone" 
+placeholder="08xxxxxxxxxx"
+oninput="formatPhone(this)">
 
 <select class="input" id="paymentMethod">
 <option value="">Pilih Metode</option>
@@ -89,6 +102,17 @@ Buat Order
 const kasirMenu = MENU_DATA;
 let cart = [];
 let island = document.getElementById("island");
+
+function formatPhone(input){
+
+let value = input.value.replace(/[^0-9]/g,'');
+
+if(value.startsWith("0")){
+value = "62"+value.substring(1);
+}
+
+input.value = value;
+}
 
 /* ================= RENDER MENU ================= */
 
@@ -207,6 +231,45 @@ updateCart();
 
 notify("🎉 Order berhasil dibuat","success");
 
+}
+
+function saveOrder(status){
+
+let data = window.pendingOrder || {};
+
+let orders=JSON.parse(localStorage.getItem("order_history")||"[]");
+
+orders.unshift({
+id:"#ORD-"+Date.now(),
+date:new Date().toLocaleString(),
+timestamp:Date.now(),
+items:data.cart || cart,
+subtotal:data.subtotal,
+service:data.service,
+tax:data.tax,
+total:data.total,
+paymentMethod:document.getElementById("paymentMethod").value,
+paymentStatus:status,
+orderStatus:"Diproses",
+customerName:data.customerName,
+customerPhone:data.customerPhone
+});
+
+localStorage.setItem("order_history",JSON.stringify(orders));
+
+cart=[];
+updateCart();
+closeQRIS();
+
+notify("💳 Pembayaran Berhasil","success");
+}
+
+function confirmPayment(){
+saveOrder("Lunas");
+}
+
+function closeQRIS(){
+document.getElementById("qrisPopup").classList.remove("show");
 }
 
 /* ================= NOTIFY ================= */
