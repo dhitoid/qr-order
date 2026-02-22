@@ -7,33 +7,36 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="menuorder.css">
-
 <script src="daftarmenu.js"></script>
 </head>
 <body>
 
-<!-- DYNAMIC ISLAND -->
+<!-- ================= DYNAMIC ISLAND ================= -->
 <div class="dynamic-island" id="island">
 ☕ Manual Order
 </div>
 
-<!-- HERO -->
+<!-- ================= HERO ================= -->
 <div class="hero">
-<div class="greeting">Mode Kasir</div>
+<div class="greeting" id="greeting">Mode Kasir</div>
 <div class="headline">Manual Order</div>
 </div>
 
-<!-- MENU GRID -->
-<div class="menu-grid" id="menuGrid"></div>
+<!-- ================= SEARCH ================= -->
+<div style="padding:0 20px 10px;">
+<input type="text" id="searchInput" class="input" placeholder="Cari menu...">
+</div>
 
-<!-- FLOATING CART -->
+<!-- ================= MENU ================= -->
+<div id="menu"></div>
+
+<!-- ================= FLOATING CART ================= -->
 <div class="floating-cart" onclick="openSheet()">
 🛒
 <div class="cart-count" id="cartCount">0</div>
 </div>
 
 <!-- ================= SHEET ================= -->
-
 <div class="sheet" id="sheet">
 
 <div class="handle"></div>
@@ -81,113 +84,46 @@ Buat Order
 
 <br><br>
 
-<button class="btn-secondary" onclick="window.location.href='kasir.html'">
+<button class="btn-secondary" onclick="backToKasir()">
 ⬅ Kembali ke Kasir
 </button>
 
 </div>
 
-<!-- ================= MODALS (HARUS SAMA SEPERTI INDEX) ================= -->
+<!-- ================= QRIS POPUP ================= -->
+<div class="qris-modal" id="qrisPopup">
+<div class="qris-content">
 
-<!-- MENU MODAL -->
-<div class="menu-modal" id="menuModal">
-  <div class="menu-modal-content">
+<div class="modal-handle"></div>
 
-    <div class="modal-handle" onclick="closeMenuModal()"></div>
-
-    <div class="menu-modal-img" id="modalImg"></div>
-
-    <div class="menu-modal-body">
-      <h2 id="modalTitle"></h2>
-      <p id="modalDesc"></p>
-
-      <div class="topping-section">
-        <h4>Pilih Topping</h4>
-        <div class="topping-list" id="toppingList"></div>
-      </div>
-
-      <div class="modal-qty">
-        <button onclick="decreaseModal()">−</button>
-        <span id="modalQty">1</span>
-        <button onclick="increaseModal()">+</button>
-      </div>
-
-      <div class="modal-price" id="modalPrice"></div>
-
-      <button class="modal-add" id="modalAddBtn">
-        Tambah ke Keranjang
-      </button>
-
-    </div>
-  </div>
+<div class="qris-header">
+<h3>Pembayaran QRIS</h3>
+<button class="close-btn" onclick="closeQRIS()">✕</button>
 </div>
 
-<!-- QRIS MODAL -->
-<div class="qris-modal" id="qrisModal">
-  <div class="qris-content">
+<div class="qris-total" id="qrisAmount"></div>
 
-    <div class="modal-handle"></div>
-
-    <div class="qris-header">
-      <h3>Pembayaran QRIS</h3>
-      <button class="close-btn" onclick="cancelQris()">✕</button>
-    </div>
-
-    <div class="qris-total" id="qrisTotal"></div>
-
-    <div class="qris-box">
-
-      <div class="qris-loading" id="qrisLoading">
-        <div class="spinner"></div>
-        <p>Menghasilkan QR...</p>
-      </div>
-
-      <img id="qrisImage" />
-
-      <div class="success-animation" id="successAnim">
-        <div class="checkmark"></div>
-      </div>
-
-      <div class="qris-overlay-status" id="qrisOverlayStatus">
-        Menunggu Pembayaran
-      </div>
-
-    </div>
-
-    <div class="qris-timer">
-      Berlaku <span id="qrisTimer">180</span> detik
-    </div>
-
-    <div class="qris-buttons">
-      <button class="btn-secondary" onclick="cancelQris()">Batal</button>
-      <button class="btn-primary" onclick="downloadQris()">Unduh QR</button>
-    </div>
-
-  </div>
+<div class="qris-box">
+<img id="qrisImage" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=DhitoCafeQRIS">
 </div>
 
-<!-- INVOICE MODAL -->
-<div class="invoice-modal" id="invoiceModal">
-  <div class="invoice-content">
-    <div class="modal-handle" onclick="closeInvoice()"></div>
-    <h3>Invoice Pesanan</h3>
-    <div id="invoiceBody"></div>
-    <div class="invoice-actions">
-      <button class="btn-secondary" onclick="closeInvoice()">Tutup</button>
-      <button class="btn-primary" onclick="downloadInvoicePDF()">Download PDF</button>
-    </div>
-  </div>
+<div class="qris-buttons">
+<button class="btn-secondary" onclick="closeQRIS()">Batal</button>
+<button class="btn-primary" onclick="confirmPayment()">Konfirmasi Bayar</button>
 </div>
 
-<!-- ENGINE -->
+</div>
+</div>
+
+<!-- ================= HISTORY & LOYALTY (WAJIB ADA UNTUK JS) ================= -->
+<div style="display:none">
+<div id="orderHistoryList"></div>
+<div class="loyalty-bar">
+<div class="loyalty-fill" id="loyaltyFill"></div>
+</div>
+</div>
+
 <script src="menuorder.js"></script>
-
-<script>
-/* OPTIONAL: Ganti tulisan island default */
-document.addEventListener("DOMContentLoaded", ()=>{
-document.getElementById("island").innerText = "☕ Manual Order";
-});
-</script>
 
 </body>
 </html>
