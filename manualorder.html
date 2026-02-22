@@ -3,157 +3,235 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Manual Order - Dhito Cafe</title>
-
+<title>Dhito Cafe - Kasir</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="menuorder.css">
 
+<style>
+body{
+margin:0;
+font-family:'Inter',sans-serif;
+background:#0f172a;
+color:white;
+}
 
-<!-- DATA MENU HARUS DI ATAS -->
-<script src="daftarmenu.js"></script>
+header{
+padding:20px;
+font-size:20px;
+font-weight:700;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+position:sticky;
+top:0;
+z-index:10;
+}
+
+.container{
+padding:20px;
+}
+
+.order-card{
+background:rgba(255,255,255,0.06);
+backdrop-filter:blur(20px);
+padding:18px;
+border-radius:18px;
+margin-bottom:18px;
+transition:0.3s;
+}
+
+.order-card:hover{
+transform:scale(1.02);
+}
+
+.order-header{
+display:flex;
+justify-content:space-between;
+font-size:14px;
+opacity:0.8;
+}
+
+.order-items{
+margin:10px 0;
+font-size:13px;
+line-height:1.6;
+}
+
+.order-total{
+font-weight:700;
+margin-top:8px;
+}
+
+.badge{
+padding:4px 10px;
+border-radius:12px;
+font-size:12px;
+}
+
+.lunas{background:#16a34a;}
+.belum{background:#f59e0b;}
+.selesai{background:#3b82f6;}
+.menunggu{background:#ef4444;}
+
+.btn-group{
+margin-top:10px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+button{
+border:none;
+padding:8px 12px;
+border-radius:10px;
+cursor:pointer;
+font-size:12px;
+font-weight:600;
+}
+
+.btn-process{background:#3b82f6;color:white;}
+.btn-done{background:#22c55e;color:white;}
+.btn-paid{background:#16a34a;color:white;}
+.btn-print{background:#6366f1;color:white;}
+
+.empty{
+opacity:0.5;
+font-size:14px;
+}
+</style>
 </head>
 
-<body data-mode="kasir">
+<body>
 
-<!-- ================= DYNAMIC ISLAND ================= -->
-<div class="dynamic-island" id="island">
-☕ Dhito Cafe
+<header>☕ Dhito Cafe — Kasir Panel</header>
+
+<div class="container">
+<div id="orderList"></div>
 </div>
 
-<!-- ================= HERO ================= -->
-<div class="hero">
-<div class="greeting">Mode Kasir</div>
-<div class="headline">Manual Order</div>
+<script>
+
+let orderHistory = JSON.parse(localStorage.getItem("order_history")||"[]");
+
+function renderOrders(){
+
+let container=document.getElementById("orderList");
+
+if(orderHistory.length===0){
+container.innerHTML="<div class='empty'>Belum ada pesanan masuk.</div>";
+return;
+}
+
+container.innerHTML = orderHistory.map((order,index)=>{
+
+let items = order.items.map(i=>
+`${i.nama} (${i.qty}x)`
+).join("<br>");
+
+return `
+<div class="order-card">
+
+<div class="order-header">
+<span>${order.id}</span>
+<span>${order.date}</span>
 </div>
 
-<!-- ================= SEARCH ================= -->
-<div class="search-wrapper">
-<input type="text" id="searchInput" class="input" placeholder="Cari menu...">
+<div class="order-items">
+${items}
 </div>
 
-<!-- ================= CATEGORY (AUTO BY JS) ================= -->
-<div class="categories">
-
-<div class="category-dropdown">
-  <button class="active dropdown-btn" onclick="toggleDropdown(event)">
-    Semua ⌄
-  </button>
-
-  <div class="dropdown-menu" id="categoryDropdown">
-    <div onclick="selectCategory('all')">Semua</div>
-    <div onclick="selectCategory('makanan')">🍛 Makanan</div>
-    <div onclick="selectCategory('minuman')">☕ Minuman</div>
-    <div onclick="selectCategory('cemilan')">🍟 Cemilan</div>
-    <div onclick="selectCategory('promo')">🔥 Promo</div>
-  </div>
+<div class="order-total">
+Total: Rp ${order.total.toLocaleString()}
 </div>
 
-<button onclick="filterMenu('makanan',this)">Makanan</button>
-<button onclick="filterMenu('minuman',this)">Minuman</button>
-<button onclick="filterMenu('cemilan',this)">Cemilan</button>
-<button onclick="filterMenu('promo',this)">Promo</button>
+<div style="margin-top:6px;">
+<span class="badge ${order.paymentStatus==="Lunas"?"lunas":"belum"}">
+${order.paymentStatus}
+</span>
 
+<span class="badge ${order.orderStatus==="Selesai"?"selesai":"menunggu"}">
+${order.orderStatus}
+</span>
 </div>
 
-<!-- ================= MENU ================= -->
-<div class="menu-grid" id="menu"></div>
+<div class="btn-group">
 
-<!-- ================= FLOATING CART ================= -->
-<div class="floating-cart" onclick="openSheet()">
-🛒
-<div class="cart-count" id="cartCount">0</div>
-</div>
-
-<!-- ================= SHEET ================= -->
-<div class="sheet" id="sheet">
-
-<div class="handle"></div>
-
-<h3>Detail Order</h3>
-
-<input class="input" id="customerName" placeholder="Nama Pelanggan (Opsional)">
-<input class="input" id="phoneInput" placeholder="No HP (Opsional)">
-
-<select class="input" id="paymentMethod">
-<option value="KASIR" selected>Bayar di Kasir</option>
-</select>
-
-<div id="cartItems"></div>
-
-<div class="checkout-summary">
-
-<div class="summary-row">
-<span>Subtotal</span>
-<span id="subtotal">Rp 0</span>
-</div>
-
-<div class="summary-row">
-<span>Service</span>
-<span id="service">Rp 0</span>
-</div>
-
-<div class="summary-row">
-<span>Pajak</span>
-<span id="tax">Rp 0</span>
-</div>
-
-<div class="summary-divider"></div>
-
-<div class="summary-row total-row">
-<span>Total</span>
-<span id="grandTotal">Rp 0</span>
-</div>
-
-</div>
-
-<button class="checkout-btn" onclick="checkoutKasir()">
-Selesaikan Order
+<button class="btn-process"
+onclick="updateStatus(${index},'Diproses')">
+Proses
 </button>
 
-<br><br>
+<button class="btn-done"
+onclick="updateStatus(${index},'Selesai')">
+Selesai
+</button>
 
-<button class="btn-secondary" onclick="window.location.href='index.html'">
-⬅ Kembali
+<button class="btn-paid"
+onclick="markPaid(${index})">
+Tandai Lunas
+</button>
+
+<button class="btn-print"
+onclick="printInvoice(${index})">
+Print
 </button>
 
 </div>
 
-<!-- ================= MENU MODAL ================= -->
-<div class="menu-modal" id="menuModal">
-<div class="menu-modal-content">
-
-<div class="modal-handle"></div>
-
-<div class="modal-image" id="modalImg"></div>
-
-<h3 id="modalTitle"></h3>
-<p id="modalDesc"></p>
-
-<div class="modal-price" id="modalPrice"></div>
-
-<div id="toppingList"></div>
-
-<div class="qty-control">
-<button onclick="decreaseModal()">−</button>
-<span id="modalQty">1</span>
-<button onclick="increaseModal()">+</button>
 </div>
+`;
 
-<button class="checkout-btn" id="modalAddBtn">
-Tambah ke Keranjang
-</button>
+}).join("");
+}
 
-</div>
-</div>
+function updateStatus(index,status){
+orderHistory[index].orderStatus=status;
+saveOrders();
+}
 
-<!-- Hidden element supaya tidak error -->
-<div style="display:none">
-<div id="orderHistoryList"></div>
-<div id="loyaltyFill"></div>
-</div>
+function markPaid(index){
+orderHistory[index].paymentStatus="Lunas";
+saveOrders();
+}
 
-<!-- SCRIPT PALING BAWAH -->
-<script src="menuorder.js"></script>
+function printInvoice(index){
+
+let order=orderHistory[index];
+
+let win=window.open("","PRINT","height=600,width=400");
+
+win.document.write(`
+<h2>Dhito Cafe</h2>
+<p>${order.id}</p>
+<p>${order.date}</p>
+<hr>
+${order.items.map(i=>
+`<p>${i.nama} (${i.qty}x)</p>`
+).join("")}
+<hr>
+<p>Total: Rp ${order.total.toLocaleString()}</p>
+`);
+
+win.document.close();
+win.print();
+}
+
+function saveOrders(){
+localStorage.setItem("order_history",JSON.stringify(orderHistory));
+renderOrders();
+}
+
+/* AUTO SYNC DENGAN MENUORDER */
+window.addEventListener("storage", function(e){
+
+if(e.key==="order_history"){
+orderHistory = JSON.parse(localStorage.getItem("order_history")||"[]");
+renderOrders();
+}
+
+});
+
+renderOrders();
+
+</script>
 
 </body>
 </html>
