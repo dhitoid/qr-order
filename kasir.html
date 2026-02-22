@@ -18,31 +18,65 @@ padding:20px;
 
 .header{
 display:flex;
+flex-direction:column;
+gap:15px;
+margin-bottom:20px;
+}
+
+.header-top{
+display:flex;
 justify-content:space-between;
 align-items:center;
-margin-bottom:20px;
 }
 
-.header h2{
-font-size:20px;
-}
+.header h2{font-size:20px}
 
-.filter{
+.search-container{
 display:flex;
-gap:10px;
-margin-bottom:20px;
+justify-content:center;
 }
 
-.filter button{
+#searchInput{
+width:100%;
+max-width:500px;
+padding:14px 18px;
+border-radius:18px;
+border:none;
+outline:none;
+font-size:14px;
+background:rgba(255,255,255,0.08);
+backdrop-filter:blur(20px);
+color:#fff;
+box-shadow:
+inset 0 0 0 1px rgba(255,255,255,0.1),
+0 10px 30px rgba(0,0,0,0.3);
+transition:.3s;
+}
+
+#searchInput:focus{
+box-shadow:
+inset 0 0 0 1px #4f9cff,
+0 10px 30px rgba(79,156,255,0.4);
+}
+
+.filter-group{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin-bottom:10px;
+}
+
+.filter-group button{
 padding:8px 14px;
 border:none;
 border-radius:20px;
 background:rgba(255,255,255,0.1);
 color:white;
 cursor:pointer;
+font-size:12px;
 }
 
-.filter button.active{
+.filter-group button.active{
 background:#4CAF50;
 }
 
@@ -55,7 +89,12 @@ gap:15px;
 background:rgba(255,255,255,0.05);
 padding:16px;
 border-radius:18px;
-backdrop-filter:blur(10px);
+backdrop-filter:blur(12px);
+transition:.3s;
+}
+
+.order-card:hover{
+transform:translateY(-3px);
 }
 
 .order-header{
@@ -77,6 +116,7 @@ padding:4px 10px;
 border-radius:20px;
 font-size:12px;
 margin-top:6px;
+margin-right:6px;
 }
 
 .waiting{background:#f59e0b33;color:#fbbf24}
@@ -110,46 +150,57 @@ opacity:.5;
 text-align:center;
 margin-top:50px;
 }
-
 </style>
 </head>
 <body>
 
 <div class="header">
+
+<div class="header-top">
 <h2>☕ Dhito Cafe - Kasir</h2>
-<div class="search-container">
-  <input 
-    type="text" 
-    id="searchInput" 
-    placeholder="Cari nama / no hp / order id..."
-    oninput="filterOrders()"
-  >
-</div>
 <div id="totalOrders"></div>
 </div>
 
-<div class="filter">
-<button onclick="setFilter('ALL')" class="active">Semua</button>
-<button onclick="setFilter('QRIS')">QRIS</button>
-<button onclick="setFilter('KASIR')">Kasir</button>
+<div class="search-container">
+<input 
+type="text"
+id="searchInput"
+placeholder="Cari nama / no hp / order id..."
+oninput="handleSearch()">
+</div>
+
+</div>
+
+<!-- FILTER METODE -->
+<div class="filter-group" id="methodFilter">
+<button onclick="setMethod('ALL',this)" class="active">Semua Metode</button>
+<button onclick="setMethod('QRIS',this)">QRIS</button>
+<button onclick="setMethod('KASIR',this)">Kasir</button>
+</div>
+
+<!-- FILTER STATUS ORDER -->
+<div class="filter-group" id="statusFilter">
+<button onclick="setStatus('ALL',this)" class="active">Semua Status</button>
+<button onclick="setStatus('Menunggu',this)">Menunggu</button>
+<button onclick="setStatus('Diproses',this)">Diproses</button>
+<button onclick="setStatus('Selesai',this)">Selesai</button>
+</div>
+
+<!-- FILTER STATUS BAYAR -->
+<div class="filter-group" id="paymentFilter">
+<button onclick="setPayment('ALL',this)" class="active">Semua Pembayaran</button>
+<button onclick="setPayment('Lunas',this)">Lunas</button>
+<button onclick="setPayment('Belum Lunas',this)">Belum Lunas</button>
 </div>
 
 <div class="orders" id="orders"></div>
 
 <script>
 
-let filter="ALL";
-
-function setFilter(f){
-filter=f;
-
-document.querySelectorAll(".filter button")
-.forEach(b=>b.classList.remove("active"));
-
-event.target.classList.add("active");
-
-renderOrders();
-}
+let methodFilter="ALL";
+let statusFilter="ALL";
+let paymentFilter="ALL";
+let searchKeyword="";
 
 function getOrders(){
 return JSON.parse(localStorage.getItem("order_history")||"[]");
@@ -159,71 +210,122 @@ function saveOrders(data){
 localStorage.setItem("order_history",JSON.stringify(data));
 }
 
+/* FILTER SETTERS */
+
+function setMethod(val,el){
+methodFilter=val;
+activate(el,"methodFilter");
+renderOrders();
+}
+
+function setStatus(val,el){
+statusFilter=val;
+activate(el,"statusFilter");
+renderOrders();
+}
+
+function setPayment(val,el){
+paymentFilter=val;
+activate(el,"paymentFilter");
+renderOrders();
+}
+
+function activate(el,groupId){
+document.querySelectorAll("#"+groupId+" button")
+.forEach(b=>b.classList.remove("active"));
+el.classList.add("active");
+}
+
+/* SEARCH */
+
+function handleSearch(){
+searchKeyword=document
+.getElementById("searchInput")
+.value.toLowerCase().trim();
+renderOrders();
+}
+
+/* UPDATE */
+
 function updateStatusById(id,status){
-
 let orders=getOrders();
-
 let order=orders.find(o=>o.id===id);
-if(!order) return;
-
+if(!order)return;
 order.orderStatus=status;
-
 saveOrders(orders);
 renderOrders();
 }
 
 function markPaidById(id){
-
 let orders=getOrders();
 let order=orders.find(o=>o.id===id);
-if(!order) return;
-
+if(!order)return;
 order.paymentStatus="Lunas";
 order.orderStatus="Diproses";
-
 saveOrders(orders);
 renderOrders();
 }
 
 function deleteOrderById(id){
-
 let orders=getOrders();
 orders=orders.filter(o=>o.id!==id);
-
 saveOrders(orders);
 renderOrders();
 }
 
+/* RENDER */
+
 function renderOrders(){
 
-let container=document.getElementById("orders");
 let orders=getOrders();
 
-if(filter!=="ALL"){
-orders=orders.filter(o=>o.paymentMethod===filter);
+/* METHOD FILTER */
+if(methodFilter!=="ALL"){
+orders=orders.filter(o=>o.paymentMethod===methodFilter);
 }
 
-document.getElementById("totalOrders").innerText=
-"Total: "+orders.length+" order";
+/* STATUS FILTER */
+if(statusFilter!=="ALL"){
+orders=orders.filter(o=>o.orderStatus===statusFilter);
+}
 
-if(orders.length===0){
-container.innerHTML="<div class='empty'>Belum ada order</div>";
+/* PAYMENT FILTER */
+if(paymentFilter!=="ALL"){
+orders=orders.filter(o=>o.paymentStatus===paymentFilter);
+}
+
+/* SEARCH */
+if(searchKeyword){
+orders=orders.filter(o=>
+(o.customerName||"").toLowerCase().includes(searchKeyword)||
+(o.customerPhone||"").toLowerCase().includes(searchKeyword)||
+(o.id||"").toLowerCase().includes(searchKeyword)
+);
+}
+
+document.getElementById("totalOrders")
+.innerText="Total: "+orders.length+" order";
+
+let container=document.getElementById("orders");
+
+if(!orders.length){
+container.innerHTML="<div class='empty'>Tidak ada data ditemukan</div>";
 return;
 }
 
-container.innerHTML=orders.map((order,i)=>{
+orders=orders.slice().reverse();
+
+container.innerHTML=orders.map(order=>{
 
 let items=order.items.map(x=>
 `${x.nama} (${x.qty}x)`
 ).join("<br>");
 
-let paymentBadge=order.paymentStatus==="Lunas"
-? "paid"
-: "unpaid";
+let paymentBadge=order.paymentStatus==="Lunas"?"paid":"unpaid";
 
 let statusClass="waiting";
-if(order.orderStatus==="Diproses") statusClass="process";
-if(order.orderStatus==="Selesai") statusClass="done";
+if(order.orderStatus==="Diproses")statusClass="process";
+if(order.orderStatus==="Selesai")statusClass="done";
 
 return `
 <div class="order-card">
@@ -234,24 +336,24 @@ return `
 </div>
 
 <div style="font-size:13px;opacity:.8;margin-bottom:6px;">
-<strong>${order.customerName || "-"}</strong><br>
-${order.customerPhone || "-"}
+<strong>${order.customerName||"-"}</strong><br>
+${order.customerPhone||"-"}
 </div>
 
-<div style="font-size:13px;">
-${items}
-</div>
+<div style="font-size:13px;">${items}</div>
 
 <div class="order-total">
 Rp ${order.total.toLocaleString()}
 </div>
 
-<div class="badge ${paymentBadge}">
+<div>
+<span class="badge ${paymentBadge}">
 ${order.paymentStatus}
-</div>
+</span>
 
-<div class="badge ${statusClass}">
+<span class="badge ${statusClass}">
 ${order.orderStatus}
+</span>
 </div>
 
 <div class="actions">
@@ -266,11 +368,11 @@ onclick="updateStatusById('${order.id}','Selesai')">
 Selesai
 </button>
 
-${order.paymentMethod==="KASIR" && order.paymentStatus!=="Lunas"
+${order.paymentMethod==="KASIR"&&order.paymentStatus!=="Lunas"
 ? `<button class="btn-warning"
 onclick="markPaidById('${order.id}')">
 Tandai Lunas
-</button>` : ""}
+</button>`:""}
 
 <button class="btn-danger"
 onclick="deleteOrderById('${order.id}')">
@@ -285,10 +387,14 @@ Hapus
 }).join("");
 }
 
+/* AUTO SYNC ANTAR TAB */
+window.addEventListener("storage",function(e){
+if(e.key==="order_history"){
 renderOrders();
+}
+});
 
-/* AUTO REFRESH */
-setInterval(renderOrders,2000);
+renderOrders();
 
 </script>
 
