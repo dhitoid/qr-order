@@ -318,7 +318,7 @@ function finalizePayment(){
 orderHistory.unshift(currentOrderData);
 localStorage.setItem("order_history",JSON.stringify(orderHistory));
 
-points+=20;
+points += APP_CONFIG.POINTS_PER_ORDER;
 localStorage.setItem("dhito_points",points);
 
 updateLoyalty();
@@ -790,8 +790,8 @@ Rp ${(i.harga*i.qty).toLocaleString()}
 `;
 }).join("");
 
-let service=subtotal*0.05;
-let tax=subtotal*0.10;
+let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
+let tax = subtotal * APP_CONFIG.TAX_PERCENT;
 let grand=subtotal+service+tax;
 
 document.getElementById("subtotal").innerText="Rp "+subtotal.toLocaleString();
@@ -1087,8 +1087,8 @@ cart.forEach(i=>{
 subtotal+=i.harga*i.qty;
 });
 
-let service=subtotal*0.05;
-let tax=subtotal*0.10;
+let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
+let tax = subtotal * APP_CONFIG.TAX_PERCENT;
 let grand=subtotal+service+tax;
 
 let method=document.getElementById("paymentMethod").value;
