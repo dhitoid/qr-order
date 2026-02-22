@@ -195,6 +195,28 @@ opacity:.5;
 text-align:center;
 margin-top:50px;
 }
+
+.kasir-notif{
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%) translateY(-20px);
+background:rgba(0,0,0,0.8);
+color:white;
+padding:12px 20px;
+border-radius:20px;
+backdrop-filter:blur(20px);
+opacity:0;
+transition:all .3s ease;
+z-index:9999;
+font-weight:600;
+}
+
+.kasir-notif.show{
+opacity:1;
+transform:translateX(-50%) translateY(0);
+}
+
 </style>
 </head>
 <body>
@@ -314,6 +336,9 @@ renderOrders();
 }
 
 /* ================= RENDER ORDER ================= */
+function refreshOrders(){
+renderOrders(); // atau nama function kamu yang render tabel
+}
 
 function renderOrders(){
 
@@ -523,6 +548,45 @@ alert("Order berhasil dibuat");
 window.addEventListener("storage",function(e){
 if(e.key==="order_history") renderOrders();
 });
+
+/* ================= REALTIME ORDER LISTENER ================= */
+
+window.addEventListener("storage", function(event){
+
+if(event.key === "order_history"){
+
+let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
+if(orders.length === 0) return;
+
+let latest = orders[0];
+
+showNotification("Order Baru Masuk! " + latest.id);
+
+refreshOrders(); // pastikan kamu punya function render ulang data
+}
+
+});
+
+
+/* ================= NOTIFICATION UI ================= */
+
+function showNotification(message){
+
+let notif = document.createElement("div");
+notif.className = "kasir-notif";
+notif.innerText = message;
+
+document.body.appendChild(notif);
+
+setTimeout(()=>{
+notif.classList.add("show");
+},100);
+
+setTimeout(()=>{
+notif.classList.remove("show");
+setTimeout(()=>notif.remove(),300);
+},3000);
+}
 
 /* INIT */
 renderOrders();
