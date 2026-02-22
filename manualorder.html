@@ -99,21 +99,18 @@ const kasirMenu = MENU_DATA;
 let cart = [];
 let island = document.getElementById("island");
 
-/* ================= AUTO FORMAT NO HP INDONESIA ================= */
+/* ================= FORMAT NO HP ================= */
 
 const phoneInput = document.getElementById("phoneInput");
 
-if(phoneInput){
 phoneInput.addEventListener("input", function(e){
 
 let value = e.target.value.replace(/\D/g,'');
 
-/* ubah 08 -> 628 */
 if(value.startsWith("0")){
 value = "62" + value.substring(1);
 }
 
-/* max 13-14 digit */
 value = value.substring(0,14);
 
 let formatted = "";
@@ -121,34 +118,36 @@ let formatted = "";
 if(value.length > 0){
 formatted = "+" + value.substring(0,2);
 }
-
 if(value.length > 2){
 formatted += " " + value.substring(2,5);
 }
-
 if(value.length > 5){
 formatted += "-" + value.substring(5,9);
 }
-
 if(value.length > 9){
 formatted += "-" + value.substring(9,13);
 }
 
 e.target.value = formatted;
+
 });
-}
 
 /* ================= RENDER MENU ================= */
 
 function renderMenu(){
+
 document.getElementById("menuGrid").innerHTML =
 kasirMenu.map(item=>`
 <div class="card">
+${item.img ? `<img src="${item.img}">` : ""}
 <h4>${item.nama}</h4>
 <div class="price">Rp ${item.harga.toLocaleString()}</div>
-<button onclick="addItem('${item.nama}')">Tambah</button>
+<button onclick="addItem('${item.nama}')">
+Tambah
+</button>
 </div>
 `).join("");
+
 }
 
 /* ================= ADD ITEM ================= */
@@ -161,11 +160,12 @@ let existing = cart.find(c=>c.nama===nama);
 if(existing){
 existing.qty++;
 }else{
-cart.push({...item,qty:1});
+cart.push({...item, qty:1});
 }
 
 updateCart();
 notify("✅ "+nama+" ditambahkan","success");
+
 }
 
 /* ================= UPDATE CART ================= */
@@ -176,91 +176,83 @@ let subtotal = 0;
 
 document.getElementById("cartItems").innerHTML =
 cart.map((i,idx)=>{
-subtotal += i.harga*i.qty;
+
+subtotal += i.harga * i.qty;
+
 return `
 <div class="cart-item">
-<span>${i.nama} (${i.qty}x)</span>
+<div class="cart-item-info">
+<div class="cart-item-name">${i.nama}</div>
+<div class="cart-item-price">
+Rp ${(i.harga*i.qty).toLocaleString()}
+</div>
+</div>
 <div class="qty-control">
 <button onclick="decrease(${idx})">−</button>
+<span>${i.qty}</span>
 <button onclick="increase(${idx})">+</button>
 </div>
 </div>
 `;
 }).join("");
 
-let service = subtotal*0.05;
-let tax = subtotal*0.10;
-let grand = subtotal+service+tax;
+let service = subtotal * 0.05;
+let tax = subtotal * 0.10;
+let grand = subtotal + service + tax;
 
-document.getElementById("subtotal").innerText="Rp "+subtotal.toLocaleString();
-document.getElementById("service").innerText="Rp "+service.toLocaleString();
-document.getElementById("tax").innerText="Rp "+tax.toLocaleString();
-document.getElementById("grandTotal").innerText="Rp "+grand.toLocaleString();
-document.getElementById("cartCount").innerText=cart.reduce((a,b)=>a+b.qty,0);
+document.getElementById("subtotal").innerText = "Rp "+subtotal.toLocaleString();
+document.getElementById("service").innerText = "Rp "+service.toLocaleString();
+document.getElementById("tax").innerText = "Rp "+tax.toLocaleString();
+document.getElementById("grandTotal").innerText = "Rp "+grand.toLocaleString();
+
+document.getElementById("cartCount").innerText =
+cart.reduce((a,b)=>a+b.qty,0);
+
 }
 
 /* ================= QTY ================= */
 
-function increase(i){cart[i].qty++;updateCart();}
-function decrease(i){
-cart[i].qty--;
-if(cart[i].qty<=0) cart.splice(i,1);
+function increase(i){
+cart[i].qty++;
 updateCart();
 }
 
-function finalizeOrder(){
-
-let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
-
-orders.unshift(window.pendingOrder);
-
-localStorage.setItem("order_history", JSON.stringify(orders));
-
-// Reset
-cart = [];
+function decrease(i){
+cart[i].qty--;
+if(cart[i].qty <= 0) cart.splice(i,1);
 updateCart();
-
-window.pendingOrder = null;
-
-notify("🎉 Order berhasil dibuat","success");
 }
 
 /* ================= CREATE ORDER ================= */
 
 function createOrder(){
 
-// 1️⃣ VALIDASI KERANJANG
 if(cart.length === 0){
 notify("Keranjang kosong","danger");
 return;
 }
 
-// 2️⃣ VALIDASI METODE
 let method = document.getElementById("paymentMethod").value;
 if(!method){
 notify("Pilih metode pembayaran","warning");
 return;
 }
 
-// 3️⃣ HITUNG TOTAL
 let subtotal = 0;
-cart.forEach(i => subtotal += i.harga * i.qty);
+cart.forEach(i=> subtotal += i.harga * i.qty);
 
 let service = subtotal * 0.05;
 let tax     = subtotal * 0.10;
 let total   = subtotal + service + tax;
 
-// 4️⃣ AMBIL DATA CUSTOMER
-let customerName  = document.getElementById("customerName").value || "Walk In";
-let customerPhone = document.getElementById("customerPhone").value || "-";
+let customerName = document.getElementById("customerName").value || "Walk In";
+let customerPhone = document.getElementById("phoneInput").value || "-";
 
-// 5️⃣ VALIDASI NOMOR (JIKA QRIS)
 if(method === "QRIS" && customerPhone === "-"){
 notify("Nomor HP wajib untuk QRIS","warning");
 return;
 }
 
-// 6️⃣ SIMPAN KE PENDING (BELUM DISAVE)
 window.pendingOrder = {
 id:"#ORD-"+Date.now(),
 date:new Date().toLocaleString(),
@@ -277,7 +269,6 @@ customerName,
 customerPhone
 };
 
-// 7️⃣ JIKA QRIS → TAMPILKAN POPUP
 if(method === "QRIS"){
 
 document.getElementById("qrisAmount")
@@ -286,46 +277,34 @@ document.getElementById("qrisAmount")
 document.getElementById("qrisPopup")
 .classList.add("show");
 
-notify("Scan QR untuk pembayaran","warning");
+notify("Scan QR untuk pembayaran","info");
 
 return;
 }
 
-// 8️⃣ JIKA BAYAR DI KASIR → LANGSUNG SIMPAN
 finalizeOrder();
 
 }
 
-function saveOrder(status){
+/* ================= FINALIZE ================= */
 
-let data = window.pendingOrder || {};
+function finalizeOrder(){
 
-let orders=JSON.parse(localStorage.getItem("order_history")||"[]");
+let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
 
-orders.unshift({
-id:"#ORD-"+Date.now(),
-date:new Date().toLocaleString(),
-timestamp:Date.now(),
-items:data.cart || cart,
-subtotal:data.subtotal,
-service:data.service,
-tax:data.tax,
-total:data.total,
-paymentMethod:document.getElementById("paymentMethod").value,
-paymentStatus:status,
-orderStatus:"Diproses",
-customerName:data.customerName,
-customerPhone:data.customerPhone
-});
+orders.unshift(window.pendingOrder);
 
-localStorage.setItem("order_history",JSON.stringify(orders));
+localStorage.setItem("order_history", JSON.stringify(orders));
 
-cart=[];
+cart = [];
 updateCart();
-closeQRIS();
+closeSheet();
 
-notify("💳 Pembayaran Berhasil","success");
+notify("🎉 Order masuk ke kasir","success");
+
 }
+
+/* ================= QRIS ================= */
 
 function confirmPayment(){
 
@@ -333,22 +312,22 @@ window.pendingOrder.paymentStatus = "Lunas";
 window.pendingOrder.orderStatus = "Diproses";
 
 finalizeOrder();
-
 closeQRIS();
 
-notify("💳 Pembayaran Berhasil","success");
+notify("💳 Pembayaran berhasil","success");
+
 }
 
 function closeQRIS(){
 document.getElementById("qrisPopup").classList.remove("show");
 }
 
-/* ================= NOTIFY ================= */
+/* ================= UI ================= */
 
 function notify(text,type){
 
-island.className="dynamic-island expand "+type;
-island.innerText=text;
+island.className = "dynamic-island expand "+type;
+island.innerText = text;
 
 setTimeout(()=>{
 island.className="dynamic-island";
@@ -357,10 +336,12 @@ island.innerText="☕ Manual Order";
 
 }
 
-/* ================= NAVIGATION ================= */
-
 function openSheet(){
 document.getElementById("sheet").classList.add("show");
+}
+
+function closeSheet(){
+document.getElementById("sheet").classList.remove("show");
 }
 
 function backToKasir(){
