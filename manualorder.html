@@ -32,7 +32,28 @@
 </div>
 
 <!-- ================= CATEGORY (AUTO BY JS) ================= -->
-<div class="categories" id="categoryContainer"></div>
+<div class="categories">
+
+<div class="category-dropdown">
+  <button class="active dropdown-btn" onclick="toggleDropdown(event)">
+    Semua ⌄
+  </button>
+
+  <div class="dropdown-menu" id="categoryDropdown">
+    <div onclick="selectCategory('all')">Semua</div>
+    <div onclick="selectCategory('makanan')">🍛 Makanan</div>
+    <div onclick="selectCategory('minuman')">☕ Minuman</div>
+    <div onclick="selectCategory('cemilan')">🍟 Cemilan</div>
+    <div onclick="selectCategory('promo')">🔥 Promo</div>
+  </div>
+</div>
+
+<button onclick="filterMenu('makanan',this)">Makanan</button>
+<button onclick="filterMenu('minuman',this)">Minuman</button>
+<button onclick="filterMenu('cemilan',this)">Cemilan</button>
+<button onclick="filterMenu('promo',this)">Promo</button>
+
+</div>
 
 <!-- ================= MENU ================= -->
 <div class="menu-grid" id="menu"></div>
