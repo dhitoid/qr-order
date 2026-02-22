@@ -2,159 +2,182 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Dhito Cafe - Kasir Mode</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dhito Cafe - Manual Order</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="menuorder.css">
+<script src="daftarmenu.js"></script>
 
 <style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+
 body{
-background:#0f172a;
-}
-.pos-header{
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
 padding:20px;
-font-weight:700;
-font-size:18px;
-text-align:center;
-background:rgba(255,255,255,0.05);
+}
+
+h2{margin-bottom:15px}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+gap:12px;
+}
+
+.menu-card{
+background:rgba(255,255,255,0.07);
+padding:14px;
+border-radius:18px;
+backdrop-filter:blur(15px);
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+min-height:120px;
+}
+
+.menu-card h4{
+font-size:14px;
+margin-bottom:6px;
+}
+
+.menu-card small{
+opacity:.6;
+font-size:12px;
+}
+
+.qty-control{
+margin-top:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.qty-control button{
+border:none;
+background:#3b82f6;
+color:white;
+width:28px;
+height:28px;
+border-radius:8px;
+cursor:pointer;
+}
+
+.cart-box{
+margin-top:25px;
+background:rgba(255,255,255,0.06);
+padding:18px;
+border-radius:20px;
 backdrop-filter:blur(20px);
 }
-.checkout-btn{
-background:#16a34a !important;
+
+.cart-item{
+display:flex;
+justify-content:space-between;
+font-size:13px;
+margin-bottom:6px;
+}
+
+.total{
+margin-top:12px;
+font-weight:700;
+}
+
+.btn{
+margin-top:15px;
+width:100%;
+padding:14px;
+border:none;
+border-radius:16px;
+font-weight:600;
+cursor:pointer;
+}
+
+.btn-primary{
+background:#4CAF50;
+color:white;
+}
+
+.btn-secondary{
+background:#ef4444;
+color:white;
+margin-top:8px;
 }
 </style>
 </head>
-
 <body>
 
-<div class="pos-header">
-🖥 Kasir Mode — Dhito Cafe
-</div>
+<h2>➕ Manual Order (Walk In)</h2>
 
-<div class="search-container">
-<input type="text" id="searchInput" placeholder="Cari menu...">
-</div>
+<div class="grid" id="menuGrid"></div>
 
-<div class="categories">
-<button onclick="filterMenu('all',this)" class="active">Semua</button>
-<button onclick="filterMenu('makanan',this)">Makanan</button>
-<button onclick="filterMenu('minuman',this)">Minuman</button>
-<button onclick="filterMenu('cemilan',this)">Cemilan</button>
-<button onclick="filterMenu('promo',this)">Promo</button>
-</div>
-
-<div class="menu-grid" id="menu"></div>
-
-<div class="floating-cart" onclick="openSheet()">
-🛒
-<div class="cart-count" id="cartCount">0</div>
-</div>
-
-<div class="sheet" id="sheet">
-<div class="handle"></div>
-
-<h3>Detail Pesanan (Kasir)</h3>
+<div class="cart-box">
+<h3>Keranjang</h3>
 <div id="cartItems"></div>
 
-<div class="checkout-summary">
-<div class="summary-row">
-<span>Subtotal</span>
-<span id="subtotal"></span>
-</div>
-<div class="summary-row">
-<span>Service (5%)</span>
-<span id="service"></span>
-</div>
-<div class="summary-row">
-<span>Pajak (10%)</span>
-<span id="tax"></span>
+<div class="total" id="cartTotal">Total: Rp 0</div>
+
+<div style="margin-top:15px">
+<label style="font-size:13px;opacity:.7">Uang Bayar</label>
+<input type="number" id="cashInput"
+placeholder="Masukkan uang bayar"
+oninput="calculateChange()"
+style="width:100%;padding:10px;border-radius:12px;border:none;margin-top:5px">
 </div>
 
-<div class="summary-divider"></div>
-
-<div class="summary-row total-row">
-<span>Total</span>
-<span id="grandTotal"></span>
-</div>
+<div style="margin-top:10px;font-weight:600" id="changeOutput">
+Kembalian: Rp 0
 </div>
 
-<button class="checkout-btn" onclick="checkoutManual()">
-Bayar & Cetak
+<button class="btn btn-primary" onclick="createOrder(false)">
+Buat Order (Belum Lunas)
 </button>
 
-</div>
-
-<div class="menu-modal" id="menuModal">
-<div class="menu-modal-content">
-
-<div class="modal-handle" onclick="closeMenuModal()"></div>
-
-<div class="menu-modal-img" id="modalImg"></div>
-
-<div class="menu-modal-body">
-<h2 id="modalTitle"></h2>
-<p id="modalDesc"></p>
-
-<div class="topping-section">
-<h4>Pilih Topping</h4>
-<div class="topping-list" id="toppingList"></div>
-</div>
-
-<div class="modal-qty">
-<button onclick="decreaseModal()">−</button>
-<span id="modalQty">1</span>
-<button onclick="increaseModal()">+</button>
-</div>
-
-<div class="modal-price" id="modalPrice"></div>
-
-<button class="modal-add" id="modalAddBtn">
-Tambah ke Keranjang
+<button class="btn btn-primary" style="background:#22c55e"
+onclick="createOrder(true)">
+Bayar & Lunas
 </button>
 
-</div>
-</div>
-</div>
-
-<div class="invoice-modal" id="invoiceModal">
-<div class="invoice-content">
-<div class="modal-handle" onclick="closeInvoice()"></div>
-<h3>Invoice</h3>
-<div id="invoiceBody"></div>
-</div>
+<button class="btn btn-secondary" onclick="resetCart()">
+Reset
+</button>
 </div>
 
-<script src="daftarmenu.js"></script>
+<button class="btn btn-primary" onclick="createOrder()">
+Buat Order
+</button>
+
+<button class="btn btn-secondary" onclick="resetCart()">
+Reset
+</button>
+</div>
 
 <script>
 
-const data = MENU_DATA;
-const toppingsData = TOPPINGS_DATA;
+/* ================= DATA ================= */
 
-let cart=[];
-let selectedToppings=[];
-let modalQty=1;
-let orderHistory = JSON.parse(localStorage.getItem("order_history")||"[]");
+let cart = [];
+let lastTotal = 0;
 
-/* ===== RENDER MENU ===== */
+function calculateChange(){
 
-function render(){
-let menu=document.getElementById("menu");
-menu.innerHTML=data.map(d=>`
-<div class="card" onclick="openMenuDetail('${d.nama}')">
-<img src="${d.img}">
-<h4>${d.nama}</h4>
-<div class="price">Rp ${d.harga.toLocaleString()}</div>
-</div>
-`).join("");
+let cash = parseInt(document.getElementById("cashInput").value) || 0;
+
+let change = cash - lastTotal;
+
+let output = document.getElementById("changeOutput");
+
+if(change < 0){
+output.innerText = "Uang kurang: Rp " + Math.abs(change).toLocaleString();
+output.style.color = "#ef4444";
+}else{
+output.innerText = "Kembalian: Rp " + change.toLocaleString();
+output.style.color = "#22c55e";
 }
 
-render();
+}
 
-/* ===== CHECKOUT MANUAL ===== */
-
-function checkoutManual(){
+function createOrder(markAsPaid){
 
 if(cart.length===0){
 alert("Keranjang kosong");
@@ -165,87 +188,193 @@ let subtotal=0;
 cart.forEach(i=>subtotal+=i.harga*i.qty);
 
 let service=subtotal*0.05;
-let tax=subtotal*0.1;
+let tax=subtotal*0.10;
 let total=subtotal+service+tax;
 
-let order={
-id:"#POS-"+Date.now(),
+lastTotal = total;
+
+if(markAsPaid){
+
+let cash = parseInt(document.getElementById("cashInput").value) || 0;
+
+if(cash < total){
+alert("Uang belum cukup!");
+return;
+}
+
+}
+
+let orders=getOrders();
+
+orders.unshift({
+id:"#ORD-"+Date.now(),
 date:new Date().toLocaleString(),
+timestamp:Date.now(),
 items:[...cart],
 subtotal,
 service,
 tax,
 total,
 paymentMethod:"KASIR",
-paymentStatus:"Lunas",
-orderStatus:"Selesai",
+paymentStatus: markAsPaid ? "Lunas" : "Belum Lunas",
+orderStatus: markAsPaid ? "Diproses" : "Menunggu",
 customerName:"Walk In",
 customerPhone:"-"
-};
+});
 
-orderHistory.unshift(order);
-localStorage.setItem("order_history",JSON.stringify(orderHistory));
+saveOrders(orders);
 
-cart=[];
-updateCart();
+alert(markAsPaid ? "Pembayaran berhasil & order masuk kasir ✅"
+: "Order dibuat (Belum Lunas)");
 
-openInvoice(order);
+resetCart();
+document.getElementById("cashInput").value="";
+document.getElementById("changeOutput").innerText="Kembalian: Rp 0";
 
 }
 
-/* ===== OPEN INVOICE ===== */
+/* ================= RENDER MENU ================= */
 
-function openInvoice(order){
+function renderMenu(){
 
-document.getElementById("invoiceBody").innerHTML=`
-<p><strong>${order.id}</strong></p>
-<p>${order.date}</p>
-<hr>
-${order.items.map(i=>
-`<p>${i.nama} (${i.qty}x)</p>`
-).join("")}
-<hr>
-<p>Total: Rp ${order.total.toLocaleString()}</p>
-`;
+let container = document.getElementById("menuGrid");
 
-document.getElementById("invoiceModal").classList.add("show");
+container.innerHTML = MENU_DATA.map(item => `
+<div class="menu-card">
+<div>
+<h4>${item.nama}</h4>
+<small>Rp ${item.harga.toLocaleString()}</small>
+</div>
+
+<div class="qty-control">
+<button onclick="changeQty('${item.nama}',-1)">-</button>
+<span id="qty-${item.nama.replace(/\s/g,'')}">0</span>
+<button onclick="changeQty('${item.nama}',1)">+</button>
+</div>
+</div>
+`).join("");
+
 }
 
-function closeInvoice(){
-document.getElementById("invoiceModal").classList.remove("show");
-}
+function changeQty(nama,delta){
 
-/* ===== CART BASIC ===== */
+let item = MENU_DATA.find(i=>i.nama===nama);
+let existing = cart.find(c=>c.nama===nama);
 
-function openMenuDetail(n){
-let item=data.find(d=>d.nama===n);
+if(!existing && delta>0){
 cart.push({nama:item.nama,harga:item.harga,qty:1});
-updateCart();
+}else if(existing){
+existing.qty += delta;
+if(existing.qty<=0){
+cart = cart.filter(c=>c.nama!==nama);
+}
 }
 
-function updateCart(){
+updateQtyDisplay();
+renderCart();
+}
+
+function updateQtyDisplay(){
+MENU_DATA.forEach(item=>{
+let el=document.getElementById("qty-"+item.nama.replace(/\s/g,''));
+let found=cart.find(c=>c.nama===item.nama);
+el.innerText=found?found.qty:0;
+});
+}
+
+/* ================= CART ================= */
+
+function renderCart(){
+
+let container=document.getElementById("cartItems");
+
+if(cart.length===0){
+container.innerHTML="<small>Belum ada item</small>";
+document.getElementById("cartTotal").innerText="Total: Rp 0";
+return;
+}
+
 let subtotal=0;
-document.getElementById("cartItems").innerHTML=
-cart.map(i=>{
+
+container.innerHTML=cart.map(i=>{
 subtotal+=i.harga*i.qty;
-return `<div>${i.nama} (${i.qty}x)</div>`;
+return `<div class="cart-item">
+<span>${i.nama} (${i.qty}x)</span>
+<span>Rp ${(i.harga*i.qty).toLocaleString()}</span>
+</div>`;
 }).join("");
 
 let service=subtotal*0.05;
-let tax=subtotal*0.1;
+let tax=subtotal*0.10;
 let total=subtotal+service+tax;
 
-document.getElementById("subtotal").innerText="Rp "+subtotal.toLocaleString();
-document.getElementById("service").innerText="Rp "+service.toLocaleString();
-document.getElementById("tax").innerText="Rp "+tax.toLocaleString();
-document.getElementById("grandTotal").innerText="Rp "+total.toLocaleString();
-document.getElementById("cartCount").innerText=
-cart.reduce((a,b)=>a+b.qty,0);
+lastTotal = total;
+calculateChange();
+
+document.getElementById("cartTotal")
+.innerText="Total: Rp "+total.toLocaleString();
 }
 
-function openSheet(){
-document.getElementById("sheet").classList.add("show");
+/* ================= STORAGE ================= */
+
+function getOrders(){
+return JSON.parse(localStorage.getItem("order_history")||"[]");
 }
+
+function saveOrders(data){
+localStorage.setItem("order_history",JSON.stringify(data));
+}
+
+/* ================= CREATE ORDER ================= */
+
+function createOrder(){
+
+if(cart.length===0){
+alert("Keranjang kosong");
+return;
+}
+
+let subtotal=0;
+cart.forEach(i=>subtotal+=i.harga*i.qty);
+
+let service=subtotal*0.05;
+let tax=subtotal*0.10;
+let total=subtotal+service+tax;
+
+let orders=getOrders();
+
+orders.unshift({
+id:"#ORD-"+Date.now(),
+date:new Date().toLocaleString(),
+timestamp:Date.now(),
+items:[...cart],
+subtotal,
+service,
+tax,
+total,
+paymentMethod:"KASIR",
+paymentStatus:"Belum Lunas",
+orderStatus:"Menunggu",
+customerName:"Walk In",
+customerPhone:"-"
+});
+
+saveOrders(orders);
+
+alert("Order berhasil dibuat & masuk ke kasir ✅");
+
+resetCart();
+}
+
+function resetCart(){
+cart=[];
+updateQtyDisplay();
+renderCart();
+}
+
+/* INIT */
+renderMenu();
+renderCart();
 
 </script>
 
