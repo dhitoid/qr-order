@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dhito Cafe - Statistik</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+
+body{
+display:flex;
+min-height:100vh;
+background:linear-gradient(135deg,#0f172a,#1e293b);
+color:white;
+}
+
+/* SIDEBAR */
+.sidebar{
+width:220px;
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(20px);
+padding:20px;
+}
+
+.sidebar h3{
+margin-bottom:20px;
+}
+
+.sidebar a{
+display:block;
+padding:10px;
+border-radius:12px;
+text-decoration:none;
+color:white;
+font-size:13px;
+margin-bottom:8px;
+background:rgba(255,255,255,0.05);
+}
+
+.sidebar a:hover{
+background:#3b82f6;
+}
+
+/* CONTENT */
+.content{
+flex:1;
+padding:30px;
+}
+
+.card{
+background:rgba(255,255,255,0.05);
+padding:20px;
+border-radius:18px;
+margin-bottom:20px;
+}
+
+.card h4{
+margin-bottom:10px;
+font-size:14px;
+opacity:.8;
+}
+
+.big{
+font-size:22px;
+font-weight:700;
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+<h3>📊 Statistik</h3>
+
+<a href="kasir.html">← Kembali ke Kasir</a>
+<a href="#" onclick="refresh()">Refresh Data</a>
+
+</div>
+
+<div class="content">
+
+<div class="card">
+<h4>Omzet Hari Ini</h4>
+<div class="big" id="todayRevenue">Rp 0</div>
+</div>
+
+<div class="card">
+<h4>Total Order Hari Ini</h4>
+<div class="big" id="todayOrders">0</div>
+</div>
+
+<div class="card">
+<h4>Omzet Sebelumnya</h4>
+<div class="big" id="previousRevenue">Rp 0</div>
+</div>
+
+</div>
+
+<script>
+
+function getOrders(){
+return JSON.parse(localStorage.getItem("order_history")||"[]");
+}
+
+function formatRupiah(num){
+return "Rp " + num.toLocaleString();
+}
+
+function loadStats(){
+
+let orders=getOrders();
+let today=new Date().toLocaleDateString();
+
+let todayRevenue=0;
+let previousRevenue=0;
+let todayCount=0;
+
+orders.forEach(o=>{
+
+if(o.paymentStatus==="Lunas"){
+
+let orderDate=new Date(o.timestamp).toLocaleDateString();
+
+if(orderDate===today){
+todayRevenue+=o.total;
+todayCount++;
+}else{
+previousRevenue+=o.total;
+}
+
+}
+
+});
+
+document.getElementById("todayRevenue").innerText=
+formatRupiah(todayRevenue);
+
+document.getElementById("todayOrders").innerText=
+todayCount;
+
+document.getElementById("previousRevenue").innerText=
+formatRupiah(previousRevenue);
+
+}
+
+function refresh(){
+loadStats();
+}
+
+loadStats();
+
+</script>
+
+</body>
+</html>
