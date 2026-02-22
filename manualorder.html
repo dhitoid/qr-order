@@ -233,6 +233,27 @@ opacity:.9;
 
 <h2>☕️ Menu Order (Walk In)</h2>
 
+<!-- ===== Search & Category ===== -->
+<div style="margin-top:20px">
+
+<input 
+id="searchInput" 
+placeholder="Cari menu..."
+oninput="renderMenu()"
+style="
+width:100%;
+padding:12px;
+border-radius:16px;
+border:none;
+outline:none;
+background:rgba(255,255,255,0.1);
+color:white;
+margin-bottom:10px;
+">
+
+<div id="categoryTabs" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+
+</div>
 <div class="grid" id="menuGrid"></div>
 
 <div class="cart">
@@ -273,6 +294,36 @@ opacity:.9;
 <script>
 let cart=[];
 let lastTotal=0;
+let selectedCategory="All";
+
+function renderCategories(){
+
+let container=document.getElementById("categoryTabs");
+
+let categories=["All",...new Set(MENU_DATA.map(i=>i.kategori))];
+
+container.innerHTML=categories.map(cat=>`
+<button 
+onclick="selectCategory('${cat}')"
+style="
+padding:6px 14px;
+border:none;
+border-radius:14px;
+background:${selectedCategory===cat ? '#22c55e' : '#334155'};
+color:white;
+font-size:12px;
+">
+${cat}
+</button>
+`).join("");
+
+}
+
+function selectCategory(cat){
+selectedCategory=cat;
+renderCategories();
+renderMenu();
+}
 
 /* ===== Island Advanced ===== */
 function showIsland(message, showProgress=false){
@@ -301,11 +352,28 @@ document.getElementById("island").classList.remove("show");
 
 /* ===== Menu ===== */
 function renderMenu(){
+
 let grid=document.getElementById("menuGrid");
-grid.innerHTML=MENU_DATA.map(item=>`
+let keyword=document.getElementById("searchInput")?.value.toLowerCase() || "";
+
+let filtered=MENU_DATA.filter(item=>{
+
+let matchCategory = selectedCategory==="All" || item.kategori===selectedCategory;
+let matchSearch = item.nama.toLowerCase().includes(keyword);
+
+return matchCategory && matchSearch;
+
+});
+
+if(filtered.length===0){
+grid.innerHTML="<p style='opacity:.6'>Menu tidak ditemukan</p>";
+return;
+}
+
+grid.innerHTML=filtered.map(item=>`
 <div class="menu-card">
 <h4>${item.nama}</h4>
-<small>Rp ${item.harga.toLocaleString()}</small>
+<small>${item.kategori} • Rp ${item.harga.toLocaleString()}</small>
 <div class="qty">
 <button onclick="changeQty('${item.nama}',-1)">-</button>
 <span id="q-${item.nama.replace(/\s/g,'')}">0</span>
@@ -313,6 +381,8 @@ grid.innerHTML=MENU_DATA.map(item=>`
 </div>
 </div>
 `).join("");
+
+updateQty();
 }
 
 function changeQty(nama,d){
@@ -490,6 +560,7 @@ updateQty();
 renderCart();
 }
 
+renderCategories();
 renderMenu();
 renderCart();
 </script>
