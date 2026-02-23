@@ -276,15 +276,6 @@ oninput="handleSearch()">
 <div class="orders" id="orders"></div>
 
 <script>
-let dateFilter="ALL";
-
-function setDateFilter(val,btn){
-dateFilter=val;
-document.querySelectorAll("#dateFilter button")
-.forEach(b=>b.classList.remove("active"));
-btn.classList.add("active");
-renderOrders();
-}
 
 /* ================= SIDEBAR ================= */
 function toggleSidebar(){
@@ -316,6 +307,15 @@ let methodFilter="ALL";
 let statusFilter="ALL";
 let paymentFilter="ALL";
 let searchKeyword="";
+let dateFilter="ALL";
+
+function setDateFilter(val,btn){
+dateFilter=val;
+document.querySelectorAll("#dateFilter button")
+.forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+renderOrders();
+}
 
 /* ================= SEARCH ================= */
 
