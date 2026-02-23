@@ -328,40 +328,41 @@ renderOrders();
 /* ================= UPDATE STATUS ================= */
 
 function updateStatusById(id,status){
-let orders=getOrders();
+  let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
 
-orders = orders.map(o=>{
-if(String(o.id) === String(id)){
-o.orderStatus = status;
-}
-return o;
-});
+  orders = orders.map(o => {
+    if(String(o.id) === String(id)){
+      o.orderStatus = status;
+    }
+    return o;
+  });
 
-saveOrders(orders);
-renderOrders();
+  localStorage.setItem("order_history", JSON.stringify(orders));
+  renderOrders();
 }
 
 function markPaidById(id){
-let orders=getOrders();
+  let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
 
-orders = orders.map(o=>{
-if(String(o.id) === String(id)){
-o.paymentStatus="Lunas";
-o.orderStatus="Diproses";
-}
-return o;
-});
+  orders = orders.map(o => {
+    if(String(o.id) === String(id)){
+      o.paymentStatus = "Lunas";
+      o.orderStatus = "Diproses";
+    }
+    return o;
+  });
 
-saveOrders(orders);
-renderOrders();
+  localStorage.setItem("order_history", JSON.stringify(orders));
+  renderOrders();
 }
 
 function deleteOrderById(id){
-let orders=getOrders()
-.filter(o=>String(o.id)!==String(id));
+  let orders = JSON.parse(localStorage.getItem("order_history") || "[]");
 
-saveOrders(orders);
-renderOrders();
+  orders = orders.filter(o => String(o.id) !== String(id));
+
+  localStorage.setItem("order_history", JSON.stringify(orders));
+  renderOrders();
 }
 
 /* ================= RENDER ORDER ================= */
