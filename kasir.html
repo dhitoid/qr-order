@@ -329,27 +329,37 @@ renderOrders();
 
 function updateStatusById(id,status){
 let orders=getOrders();
-let order=orders.find(o=>o.id===id);
-if(!order)return;
 
-order.orderStatus=status;
+orders = orders.map(o=>{
+if(String(o.id) === String(id)){
+o.orderStatus = status;
+}
+return o;
+});
+
 saveOrders(orders);
 renderOrders();
 }
 
 function markPaidById(id){
 let orders=getOrders();
-let order=orders.find(o=>o.id===id);
-if(!order)return;
 
-order.paymentStatus="Lunas";
-order.orderStatus="Diproses";
+orders = orders.map(o=>{
+if(String(o.id) === String(id)){
+o.paymentStatus="Lunas";
+o.orderStatus="Diproses";
+}
+return o;
+});
+
 saveOrders(orders);
 renderOrders();
 }
 
 function deleteOrderById(id){
-let orders=getOrders().filter(o=>o.id!==id);
+let orders=getOrders()
+.filter(o=>String(o.id)!==String(id));
+
 saveOrders(orders);
 renderOrders();
 }
