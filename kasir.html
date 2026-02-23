@@ -149,6 +149,7 @@ padding:16px;
 border-radius:18px;
 backdrop-filter:blur(12px);
 transition:.3s;
+animation:fadeIn .25s ease;
 }
 
 .order-card:hover{
@@ -217,6 +218,10 @@ opacity:1;
 transform:translateX(-50%) translateY(0);
 }
 
+@keyframes fadeIn{
+from{opacity:0;transform:translateY(10px)}
+to{opacity:1;transform:translateY(0)}
+}
 </style>
 </head>
 <body>
@@ -237,11 +242,17 @@ transform:translateX(-50%) translateY(0);
 <h2>Kasir</h2>
 </div>
 <div id="totalOrders"></div>
+<div id="summaryBox" style="font-size:12px;opacity:.7"></div>
 </div>
 
 <input type="text" id="searchInput"
 placeholder="Cari nama / no hp / order id..."
 oninput="handleSearch()">
+</div>
+
+<div class="filter-group" id="dateFilter">
+<button onclick="setDateFilter('ALL',this)" class="active">Semua Tanggal</button>
+<button onclick="setDateFilter('TODAY',this)">Hari Ini</button>
 </div>
 
 <div class="filter-group" id="methodFilter">
@@ -266,6 +277,15 @@ oninput="handleSearch()">
 <div class="orders" id="orders"></div>
 
 <script>
+let dateFilter="ALL";
+
+function setDateFilter(val,btn){
+dateFilter=val;
+document.querySelectorAll("#dateFilter button")
+.forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+renderOrders();
+}
 
 /* ================= SIDEBAR ================= */
 function toggleSidebar(){
@@ -354,6 +374,13 @@ orders=orders.filter(o=>o.orderStatus===statusFilter);
 if(paymentFilter!=="ALL")
 orders=orders.filter(o=>o.paymentStatus===paymentFilter);
 
+if(dateFilter==="TODAY"){
+let today=new Date().toDateString();
+orders=orders.filter(o=>
+new Date(o.timestamp).toDateString()===today
+);
+}
+
 if(searchKeyword){
 orders=orders.filter(o=>
 (o.customerName||"").toLowerCase().includes(searchKeyword)||
@@ -361,6 +388,13 @@ orders=orders.filter(o=>
 (o.id||"").toLowerCase().includes(searchKeyword)
 );
 }
+
+let totalRevenue=orders
+.filter(o=>o.paymentStatus==="Lunas")
+.reduce((sum,o)=>sum+o.total,0);
+
+document.getElementById("summaryBox").innerHTML=
+"Omzet: Rp "+totalRevenue.toLocaleString();
 
 document.getElementById("totalOrders")
 .innerText="Total: "+orders.length+" order";
@@ -493,11 +527,18 @@ function renderCartPreview(){
 let subtotal=0;
 cartKasir.forEach(i=>subtotal+=i.harga*i.qty);
 
-document.getElementById("manualMenu")
-.insertAdjacentHTML("beforeend",
-`<div style="margin-top:10px;font-size:12px;opacity:.7">
-Subtotal: Rp ${subtotal.toLocaleString()}
-</div>`);
+let preview=document.getElementById("cartPreview");
+
+if(!preview){
+preview=document.createElement("div");
+preview.id="cartPreview";
+preview.style.marginTop="10px";
+preview.style.fontSize="12px";
+preview.style.opacity=".7";
+document.getElementById("manualMenu").appendChild(preview);
+}
+
+preview.innerHTML="Subtotal: Rp "+subtotal.toLocaleString();
 }
 
 /* ================= CREATE ORDER ================= */
