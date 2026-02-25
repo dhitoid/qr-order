@@ -74,59 +74,27 @@ e.target.value = formatted;
 });
 }
 
-function calculateItemPrice(item){
-
-let toppingTotal = (item.selectedToppings || [])
-  .reduce((sum,t)=>sum + t.harga, 0);
-
-return item.basePrice + (item.sizePrice || 0) + toppingTotal;
-
-}
-
 function openMenuDetail(n){
-
 let item=data.find(d=>d.nama===n);
-
 selectedToppings=[];
 modalQty=1;
-selectedSize=null;
-
 document.getElementById("modalQty").innerText=modalQty;
 
 modalImg.style.backgroundImage=`url('${item.img}')`;
 modalTitle.innerText=item.nama;
 modalDesc.innerText=item.desc;
 
-/* render topping khusus item */
-let toppingContainer=document.getElementById("toppingList");
-toppingContainer.innerHTML=renderToppings(item);
-
-/* aktifkan checkbox */
-setTimeout(()=>{
-document.querySelectorAll("#toppingList input")
-.forEach(cb=>{
-cb.addEventListener("change",()=>{
-let harga=parseInt(cb.dataset.harga);
-let nama=cb.value;
-
-if(cb.checked){
-selectedToppings.push({nama,harga});
-}else{
-selectedToppings=
-selectedToppings.filter(t=>t.nama!==nama);
-}
-
-updatePrice(item);
-});
-});
-},50);
-
+renderToppings();
 updatePrice(item);
 
-modalAddBtn.innerText="Tambah ke Keranjang";
 modalAddBtn.onclick=()=>addToCartWithTopping(item);
 
 modal.classList.add("show");
+}
+
+modal.addEventListener("click",(e)=>{
+if(e.target===modal){
+modal.classList.remove("show");
 }
 });
 
@@ -134,7 +102,6 @@ let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
 let filter="all";
 let selectedToppings=[];
 let modalQty = 1;
-let selectedSize = null; // karena sistem lama masih refer
 let searchQuery="";
 let paymentLock = false;
 let showAllHistory = false;
@@ -419,8 +386,9 @@ btn.classList.add("active");
 });
 
 const data = MENU_DATA;
+const toppingsData = TOPPINGS_DATA;
 
-/*function renderToppings(){
+function renderToppings(){
 let list=document.getElementById("toppingList");
 list.innerHTML="";
 
@@ -431,29 +399,6 @@ onclick="toggleTopping('${t.nama}')">
 ${t.nama} (+Rp ${t.harga.toLocaleString()})
 </div>`;
 });
-}*/
-
-function getToppings(menuItem){
-  return menuItem.toppings || [];
-}
-
-function renderToppings(menuItem){
-
-  let toppings = getToppings(menuItem);
-
-  if(!toppings.length){
-    return "<p style='opacity:.5'>Tidak ada topping tambahan</p>";
-  }
-
-  return toppings.map(t=>`
-    <label style="display:flex;justify-content:space-between;margin-bottom:8px;">
-      <span>${t.nama}</span>
-      <span>+ Rp ${t.harga.toLocaleString()}</span>
-      <input type="checkbox" 
-        value="${t.nama}" 
-        data-harga="${t.harga}">
-    </label>
-  `).join("");
 }
 
 function toggleDropdown(e){
@@ -485,45 +430,65 @@ document.addEventListener("click",()=>{
 document.getElementById("categoryDropdown").classList.remove("show");
 });
 
-function updatePrice(item){
+function toggleTopping(nama){
+let index=selectedToppings.findIndex(t=>t.nama===nama);
+let topping=toppingsData.find(t=>t.nama===nama);
 
-let total = item.harga;
+if(index>-1){
+selectedToppings.splice(index,1);
+}else{
+selectedToppings.push(topping);
+}
 
-selectedToppings.forEach(t=>{
-total += t.harga;
+updateActiveUI();
+updatePrice(data.find(d=>d.nama===modalTitle.innerText));
+}
+
+function updateActiveUI(){
+document.querySelectorAll(".topping-item").forEach(el=>{
+let nama=el.innerText.split(" (+")[0];
+if(selectedToppings.find(t=>t.nama===nama)){
+el.classList.add("active");
+}else{
+el.classList.remove("active");
+}
 });
+}
 
-total *= modalQty;
+function updatePrice(item){
+let total=item.harga;
 
-modalPrice.innerText =
-"Total Rp " + total.toLocaleString();
+selectedToppings.forEach(t=>total+=t.harga);
+
+total*=modalQty;
+
+modalPrice.innerText="Total Rp "+total.toLocaleString();
 }
 
 function addToCartWithTopping(item){
 
-let sizeOption = selectedSize || null; // ambil dari UI
-let sizePrice = sizeOption ? sizeOption.harga : 0;
-
-let existing = cart.find(c =>
-  c.nama === item.nama &&
-  JSON.stringify(c.selectedToppings) === JSON.stringify(selectedToppings) &&
-  c.size === (sizeOption ? sizeOption.label : null)
-);
-
-if(existing){
-  existing.qty += modalQty;
-}else{
-  cart.push({
-    nama: item.nama,
-    basePrice: item.harga,
-    size: sizeOption ? sizeOption.label : null,
-    sizePrice: sizePrice,
-    selectedToppings: [...selectedToppings],
-    qty: modalQty
-  });
+let toppingText=selectedToppings.map(t=>t.nama).join(", ");
+let finalName=item.nama;
+if(toppingText){
+finalName+=` (${toppingText})`;
 }
 
-notify(`✅ ${item.nama} (${modalQty}x)`,"success");
+let basePrice=item.harga;
+selectedToppings.forEach(t=>basePrice+=t.harga);
+
+let existing=cart.find(c=>c.nama===finalName);
+
+if(existing){
+existing.qty+=modalQty;
+}else{
+cart.push({
+nama:finalName,
+harga:basePrice,
+qty:modalQty
+});
+}
+
+notify(`✅ ${finalName} (${modalQty}x)`,"success");
 
 modal.classList.remove("show");
 saveCart();
@@ -554,31 +519,12 @@ let badgeClass = order.paymentStatus==="Lunas"
 
 let qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data="+encodeURIComponent(order.id);
 
-let itemsHTML = order.items.map(i=>{
-
-let itemPrice = calculateItemPrice(i);
-let totalItem = itemPrice * i.qty;
-
-let sizeText = i.size ? ` - ${i.size}` : "";
-
-let toppingText = "";
-if(i.selectedToppings && i.selectedToppings.length){
-  toppingText = "<br><small>+ " +
-    i.selectedToppings.map(t=>t.nama).join(", ") +
-    "</small>";
-}
-
-return `
-<div class="invoice-item">
-<div>
-${i.nama}${sizeText} (${i.qty}x)
-${toppingText}
-</div>
-<span>Rp ${totalItem.toLocaleString()}</span>
-</div>
-`;
-
-}).join("");
+let itemsHTML=order.items.map(i=>
+`<div class="invoice-item">
+<span>${i.nama} (${i.qty}x)</span>
+<span>Rp ${(i.harga*i.qty).toLocaleString()}</span>
+</div>`
+).join("");
 
 document.getElementById("invoiceBody").innerHTML=`
 
@@ -661,7 +607,7 @@ function closeInvoice(){
 document.getElementById("invoiceModal").classList.remove("show");
 }
 
-/*function render(){
+function render(){
 
 menuEl.innerHTML="";
 
@@ -698,28 +644,6 @@ Tambah
 `;
 
 });
-}*/
-
-function render(){
-
-menuEl.innerHTML="";
-
-let filtered=data.filter(d=>{
-return (filter==="all"||d.kategori===filter) &&
-(d.nama.toLowerCase().includes(searchQuery));
-});
-
-menuEl.innerHTML = filtered.map(d=>`
-<div class="card" onclick="openMenuDetail('${d.nama}')">
-<img src="${d.img}">
-<h4>${d.nama}</h4>
-<div class="price">Rp ${d.harga.toLocaleString()}</div>
-<button onclick="event.stopPropagation();openMenuDetail('${d.nama}')">
-Tambah
-</button>
-</div>
-`).join("");
-
 }
 
 function filterMenu(k,btn){
@@ -824,64 +748,35 @@ islandForceShow = false;
 }
 
 function add(n){
-
-let item = cart.find(i => i.nama === n);
-
+let item=cart.find(i=>i.nama===n);
 if(item){
-  item.qty++;
-  notify(`🔄 ${n} (${item.qty}x)`,"info");
+item.qty++;
+notify(`🔄 ${n} (${item.qty}x)`,"info");
 }else{
-  let d = data.find(x => x.nama === n);
-
-  cart.push({
-    nama: d.nama,
-    basePrice: d.harga,
-    size: null,
-    sizePrice: 0,
-    selectedToppings: [],
-    qty: 1
-  });
-
-  notify(`✅ ${n} ditambahkan`,"success");
+let d=data.find(x=>x.nama===n);
+cart.push({...d,qty:1});
+notify(`✅ ${n} ditambahkan`,"success");
 }
-
 saveCart();
 updateCart();
 }
 
 function updateCart(){
 
-let subtotal = 0;
+let subtotal=0;
 
-document.getElementById("cartItems").innerHTML =
+document.getElementById("cartItems").innerHTML=
 cart.map((i,idx)=>{
-
-let itemPrice = calculateItemPrice(i);
-let totalItem = itemPrice * i.qty;
-
-subtotal += totalItem;
-
-let sizeText = i.size ? ` - ${i.size}` : "";
-
-let toppingText = "";
-if(i.selectedToppings && i.selectedToppings.length){
-  toppingText = "<br><small>+ " +
-    i.selectedToppings.map(t=>t.nama).join(", ") +
-    "</small>";
-}
+subtotal+=i.harga*i.qty;
 
 return `
 <div class="cart-item">
 <div class="cart-item-info"
 onclick="editCartItem(${idx})">
 
-<span class="cart-item-name">
-${i.nama}${sizeText}
-${toppingText}
-</span>
-
+<span class="cart-item-name">${i.nama}</span>
 <span class="cart-item-price">
-Rp ${totalItem.toLocaleString()}
+Rp ${(i.harga*i.qty).toLocaleString()}
 </span>
 
 </div>
@@ -897,7 +792,7 @@ Rp ${totalItem.toLocaleString()}
 
 let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
 let tax = subtotal * APP_CONFIG.TAX_PERCENT;
-let grand = subtotal + service + tax;
+let grand=subtotal+service+tax;
 
 document.getElementById("subtotal").innerText="Rp "+subtotal.toLocaleString();
 document.getElementById("service").innerText="Rp "+service.toLocaleString();
@@ -910,34 +805,33 @@ cartCount.innerText=cart.reduce((a,b)=>a+b.qty,0);
 
 function editCartItem(index){
 
-let item = cart[index];
-let base = data.find(d=>d.nama===item.nama);
+let item=cart[index];
 
-selectedToppings = [...(item.selectedToppings || [])];
-modalQty = item.qty;
+let baseName=item.nama.split(" (")[0];
+let base=data.find(d=>d.nama===baseName);
 
-selectedSize = null;
+selectedToppings=[];
+modalQty=item.qty;
 
-document.getElementById("modalQty").innerText = modalQty;
+document.getElementById("modalQty").innerText=modalQty;
 
-modalImg.style.backgroundImage = `url('${base.img}')`;
-modalTitle.innerText = base.nama;
-modalDesc.innerText = base.desc;
+modalImg.style.backgroundImage=`url('${base.img}')`;
+modalTitle.innerText=base.nama;
+modalDesc.innerText=base.desc;
 
-/* render toppings */
-let toppingContainer = document.getElementById("toppingList");
-toppingContainer.innerHTML = renderToppings(base);
+renderToppings();
 
-/* centang topping */
-setTimeout(()=>{
-document.querySelectorAll("#toppingList input")
-.forEach(cb=>{
-if(selectedToppings.find(t=>t.nama===cb.value)){
-cb.checked = true;
-}
+/* restore topping */
+let toppingText=item.nama.match(/\((.*?)\)/);
+if(toppingText){
+let toppingArr=toppingText[1].split(", ");
+toppingArr.forEach(t=>{
+let top=toppingsData.find(td=>td.nama===t);
+if(top) selectedToppings.push(top);
 });
-},50);
+}
 
+updateActiveUI();
 updatePrice(base);
 
 modalAddBtn.innerText="Update Pesanan";
@@ -951,13 +845,20 @@ modal.classList.add("show");
 
 function updateCartItem(index,item){
 
-cart[index] = {
-nama: item.nama,
-basePrice: item.harga,
-size: selectedSize ? selectedSize.label : null,
-sizePrice: selectedSize ? selectedSize.harga : 0,
-selectedToppings: [...selectedToppings],
-qty: modalQty
+let toppingText=selectedToppings.map(t=>t.nama).join(", ");
+let finalName=item.nama;
+
+if(toppingText){
+finalName+=` (${toppingText})`;
+}
+
+let basePrice=item.harga;
+selectedToppings.forEach(t=>basePrice+=t.harga);
+
+cart[index]={
+nama:finalName,
+harga:basePrice,
+qty:modalQty
 };
 
 modal.classList.remove("show");
@@ -1181,22 +1082,14 @@ paymentLock = true;
 setCheckoutLoading(true);
 
 /* HITUNG TOTAL */
-let subtotal = 0;
-
-cart.forEach(i => {
-
-  let toppingTotal = (i.selectedToppings || [])
-    .reduce((sum,t)=>sum + t.harga, 0);
-
-  let itemPrice = i.basePrice + (i.sizePrice || 0) + toppingTotal;
-
-  subtotal += itemPrice * i.qty;
-
+let subtotal=0;
+cart.forEach(i=>{
+subtotal+=i.harga*i.qty;
 });
 
 let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
 let tax = subtotal * APP_CONFIG.TAX_PERCENT;
-let grand = subtotal + service + tax;
+let grand=subtotal+service+tax;
 
 let method=document.getElementById("paymentMethod").value;
 let name=document.querySelectorAll(".input")[0].value;
