@@ -661,7 +661,7 @@ function closeInvoice(){
 document.getElementById("invoiceModal").classList.remove("show");
 }
 
-function render(){
+/*function render(){
 
 menuEl.innerHTML="";
 
@@ -698,6 +698,28 @@ Tambah
 `;
 
 });
+}*/
+
+function render(){
+
+menuEl.innerHTML="";
+
+let filtered=data.filter(d=>{
+return (filter==="all"||d.kategori===filter) &&
+(d.nama.toLowerCase().includes(searchQuery));
+});
+
+menuEl.innerHTML = filtered.map(d=>`
+<div class="card" onclick="openMenuDetail('${d.nama}')">
+<img src="${d.img}">
+<h4>${d.nama}</h4>
+<div class="price">Rp ${d.harga.toLocaleString()}</div>
+<button onclick="event.stopPropagation();openMenuDetail('${d.nama}')">
+Tambah
+</button>
+</div>
+`).join("");
+
 }
 
 function filterMenu(k,btn){
