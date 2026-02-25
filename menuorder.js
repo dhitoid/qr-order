@@ -84,26 +84,49 @@ return item.basePrice + (item.sizePrice || 0) + toppingTotal;
 }
 
 function openMenuDetail(n){
+
 let item=data.find(d=>d.nama===n);
+
 selectedToppings=[];
 modalQty=1;
+selectedSize=null;
+
 document.getElementById("modalQty").innerText=modalQty;
 
 modalImg.style.backgroundImage=`url('${item.img}')`;
 modalTitle.innerText=item.nama;
 modalDesc.innerText=item.desc;
 
-renderToppings();
+/* render topping khusus item */
+let toppingContainer=document.getElementById("toppingList");
+toppingContainer.innerHTML=renderToppings(item);
+
+/* aktifkan checkbox */
+setTimeout(()=>{
+document.querySelectorAll("#toppingList input")
+.forEach(cb=>{
+cb.addEventListener("change",()=>{
+let harga=parseInt(cb.dataset.harga);
+let nama=cb.value;
+
+if(cb.checked){
+selectedToppings.push({nama,harga});
+}else{
+selectedToppings=
+selectedToppings.filter(t=>t.nama!==nama);
+}
+
+updatePrice(item);
+});
+});
+},50);
+
 updatePrice(item);
 
+modalAddBtn.innerText="Tambah ke Keranjang";
 modalAddBtn.onclick=()=>addToCartWithTopping(item);
 
 modal.classList.add("show");
-}
-
-modal.addEventListener("click",(e)=>{
-if(e.target===modal){
-modal.classList.remove("show");
 }
 });
 
@@ -111,6 +134,7 @@ let cart=JSON.parse(localStorage.getItem("dhito_cart")||"[]");
 let filter="all";
 let selectedToppings=[];
 let modalQty = 1;
+let selectedSize = null; // karena sistem lama masih refer
 let searchQuery="";
 let paymentLock = false;
 let showAllHistory = false;
@@ -395,7 +419,6 @@ btn.classList.add("active");
 });
 
 const data = MENU_DATA;
-const toppingsData = TOPPINGS_DATA;
 
 /*function renderToppings(){
 let list=document.getElementById("toppingList");
@@ -462,44 +485,18 @@ document.addEventListener("click",()=>{
 document.getElementById("categoryDropdown").classList.remove("show");
 });
 
-function toggleTopping(nama){
-let index=selectedToppings.findIndex(t=>t.nama===nama);
-let topping=toppingsData.find(t=>t.nama===nama);
-
-if(index>-1){
-selectedToppings.splice(index,1);
-}else{
-selectedToppings.push(topping);
-}
-
-updateActiveUI();
-updatePrice(data.find(d=>d.nama===modalTitle.innerText));
-}
-
-function updateActiveUI(){
-document.querySelectorAll(".topping-item").forEach(el=>{
-let nama=el.innerText.split(" (+")[0];
-if(selectedToppings.find(t=>t.nama===nama)){
-el.classList.add("active");
-}else{
-el.classList.remove("active");
-}
-});
-}
-
 function updatePrice(item){
 
 let total = item.harga;
 
-if(selectedSize){
-total += selectedSize.harga;
-}
-
-selectedToppings.forEach(t=> total += t.harga);
+selectedToppings.forEach(t=>{
+total += t.harga;
+});
 
 total *= modalQty;
 
-modalPrice.innerText = "Total Rp " + total.toLocaleString();
+modalPrice.innerText =
+"Total Rp " + total.toLocaleString();
 }
 
 function addToCartWithTopping(item){
@@ -897,9 +894,7 @@ let base = data.find(d=>d.nama===item.nama);
 selectedToppings = [...(item.selectedToppings || [])];
 modalQty = item.qty;
 
-selectedSize = item.size
-? base.sizes.find(s=>s.label===item.size)
-: null;
+selectedSize = null;
 
 document.getElementById("modalQty").innerText = modalQty;
 
