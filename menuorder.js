@@ -74,6 +74,15 @@ e.target.value = formatted;
 });
 }
 
+function calculateItemPrice(item){
+
+let toppingTotal = (item.selectedToppings || [])
+  .reduce((sum,t)=>sum + t.harga, 0);
+
+return item.basePrice + (item.sizePrice || 0) + toppingTotal;
+
+}
+
 function openMenuDetail(n){
 let item=data.find(d=>d.nama===n);
 selectedToppings=[];
@@ -479,13 +488,18 @@ el.classList.remove("active");
 }
 
 function updatePrice(item){
-let total=item.harga;
 
-selectedToppings.forEach(t=>total+=t.harga);
+let total = item.harga;
 
-total*=modalQty;
+if(selectedSize){
+total += selectedSize.harga;
+}
 
-modalPrice.innerText="Total Rp "+total.toLocaleString();
+selectedToppings.forEach(t=> total += t.harga);
+
+total *= modalQty;
+
+modalPrice.innerText = "Total Rp " + total.toLocaleString();
 }
 
 function addToCartWithTopping(item){
@@ -543,12 +557,31 @@ let badgeClass = order.paymentStatus==="Lunas"
 
 let qrUrl="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data="+encodeURIComponent(order.id);
 
-let itemsHTML=order.items.map(i=>
-`<div class="invoice-item">
-<span>${i.nama} (${i.qty}x)</span>
-<span>Rp ${(i.harga*i.qty).toLocaleString()}</span>
-</div>`
-).join("");
+let itemsHTML = order.items.map(i=>{
+
+let itemPrice = calculateItemPrice(i);
+let totalItem = itemPrice * i.qty;
+
+let sizeText = i.size ? ` - ${i.size}` : "";
+
+let toppingText = "";
+if(i.selectedToppings && i.selectedToppings.length){
+  toppingText = "<br><small>+ " +
+    i.selectedToppings.map(t=>t.nama).join(", ") +
+    "</small>";
+}
+
+return `
+<div class="invoice-item">
+<div>
+${i.nama}${sizeText} (${i.qty}x)
+${toppingText}
+</div>
+<span>Rp ${totalItem.toLocaleString()}</span>
+</div>
+`;
+
+}).join("");
 
 document.getElementById("invoiceBody").innerHTML=`
 
@@ -799,20 +832,37 @@ updateCart();
 
 function updateCart(){
 
-let subtotal=0;
+let subtotal = 0;
 
-document.getElementById("cartItems").innerHTML=
+document.getElementById("cartItems").innerHTML =
 cart.map((i,idx)=>{
-subtotal+=i.harga*i.qty;
+
+let itemPrice = calculateItemPrice(i);
+let totalItem = itemPrice * i.qty;
+
+subtotal += totalItem;
+
+let sizeText = i.size ? ` - ${i.size}` : "";
+
+let toppingText = "";
+if(i.selectedToppings && i.selectedToppings.length){
+  toppingText = "<br><small>+ " +
+    i.selectedToppings.map(t=>t.nama).join(", ") +
+    "</small>";
+}
 
 return `
 <div class="cart-item">
 <div class="cart-item-info"
 onclick="editCartItem(${idx})">
 
-<span class="cart-item-name">${i.nama}</span>
+<span class="cart-item-name">
+${i.nama}${sizeText}
+${toppingText}
+</span>
+
 <span class="cart-item-price">
-Rp ${(i.harga*i.qty).toLocaleString()}
+Rp ${totalItem.toLocaleString()}
 </span>
 
 </div>
@@ -828,7 +878,7 @@ Rp ${(i.harga*i.qty).toLocaleString()}
 
 let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
 let tax = subtotal * APP_CONFIG.TAX_PERCENT;
-let grand=subtotal+service+tax;
+let grand = subtotal + service + tax;
 
 document.getElementById("subtotal").innerText="Rp "+subtotal.toLocaleString();
 document.getElementById("service").innerText="Rp "+service.toLocaleString();
@@ -841,33 +891,36 @@ cartCount.innerText=cart.reduce((a,b)=>a+b.qty,0);
 
 function editCartItem(index){
 
-let item=cart[index];
+let item = cart[index];
+let base = data.find(d=>d.nama===item.nama);
 
-let baseName=item.nama.split(" (")[0];
-let base=data.find(d=>d.nama===baseName);
+selectedToppings = [...(item.selectedToppings || [])];
+modalQty = item.qty;
 
-selectedToppings=[];
-modalQty=item.qty;
+selectedSize = item.size
+? base.sizes.find(s=>s.label===item.size)
+: null;
 
-document.getElementById("modalQty").innerText=modalQty;
+document.getElementById("modalQty").innerText = modalQty;
 
-modalImg.style.backgroundImage=`url('${base.img}')`;
-modalTitle.innerText=base.nama;
-modalDesc.innerText=base.desc;
+modalImg.style.backgroundImage = `url('${base.img}')`;
+modalTitle.innerText = base.nama;
+modalDesc.innerText = base.desc;
 
-renderToppings();
+/* render toppings */
+let toppingContainer = document.getElementById("toppingList");
+toppingContainer.innerHTML = renderToppings(base);
 
-/* restore topping */
-let toppingText=item.nama.match(/\((.*?)\)/);
-if(toppingText){
-let toppingArr=toppingText[1].split(", ");
-toppingArr.forEach(t=>{
-let top=toppingsData.find(td=>td.nama===t);
-if(top) selectedToppings.push(top);
-});
+/* centang topping */
+setTimeout(()=>{
+document.querySelectorAll("#toppingList input")
+.forEach(cb=>{
+if(selectedToppings.find(t=>t.nama===cb.value)){
+cb.checked = true;
 }
+});
+},50);
 
-updateActiveUI();
 updatePrice(base);
 
 modalAddBtn.innerText="Update Pesanan";
@@ -881,20 +934,13 @@ modal.classList.add("show");
 
 function updateCartItem(index,item){
 
-let toppingText=selectedToppings.map(t=>t.nama).join(", ");
-let finalName=item.nama;
-
-if(toppingText){
-finalName+=` (${toppingText})`;
-}
-
-let basePrice=item.harga;
-selectedToppings.forEach(t=>basePrice+=t.harga);
-
-cart[index]={
-nama:finalName,
-harga:basePrice,
-qty:modalQty
+cart[index] = {
+nama: item.nama,
+basePrice: item.harga,
+size: selectedSize ? selectedSize.label : null,
+sizePrice: selectedSize ? selectedSize.harga : 0,
+selectedToppings: [...selectedToppings],
+qty: modalQty
 };
 
 modal.classList.remove("show");
