@@ -388,7 +388,7 @@ btn.classList.add("active");
 const data = MENU_DATA;
 const toppingsData = TOPPINGS_DATA;
 
-function renderToppings(){
+/*function renderToppings(){
 let list=document.getElementById("toppingList");
 list.innerHTML="";
 
@@ -399,6 +399,29 @@ onclick="toggleTopping('${t.nama}')">
 ${t.nama} (+Rp ${t.harga.toLocaleString()})
 </div>`;
 });
+}*/
+
+function getToppings(menuItem){
+  return menuItem.toppings || [];
+}
+
+function renderToppings(menuItem){
+
+  let toppings = getToppings(menuItem);
+
+  if(!toppings.length){
+    return "<p style='opacity:.5'>Tidak ada topping tambahan</p>";
+  }
+
+  return toppings.map(t=>`
+    <label style="display:flex;justify-content:space-between;margin-bottom:8px;">
+      <span>${t.nama}</span>
+      <span>+ Rp ${t.harga.toLocaleString()}</span>
+      <input type="checkbox" 
+        value="${t.nama}" 
+        data-harga="${t.harga}">
+    </label>
+  `).join("");
 }
 
 function toggleDropdown(e){
@@ -467,28 +490,29 @@ modalPrice.innerText="Total Rp "+total.toLocaleString();
 
 function addToCartWithTopping(item){
 
-let toppingText=selectedToppings.map(t=>t.nama).join(", ");
-let finalName=item.nama;
-if(toppingText){
-finalName+=` (${toppingText})`;
-}
+let sizeOption = selectedSize || null; // ambil dari UI
+let sizePrice = sizeOption ? sizeOption.harga : 0;
 
-let basePrice=item.harga;
-selectedToppings.forEach(t=>basePrice+=t.harga);
-
-let existing=cart.find(c=>c.nama===finalName);
+let existing = cart.find(c =>
+  c.nama === item.nama &&
+  JSON.stringify(c.selectedToppings) === JSON.stringify(selectedToppings) &&
+  c.size === (sizeOption ? sizeOption.label : null)
+);
 
 if(existing){
-existing.qty+=modalQty;
+  existing.qty += modalQty;
 }else{
-cart.push({
-nama:finalName,
-harga:basePrice,
-qty:modalQty
-});
+  cart.push({
+    nama: item.nama,
+    basePrice: item.harga,
+    size: sizeOption ? sizeOption.label : null,
+    sizePrice: sizePrice,
+    selectedToppings: [...selectedToppings],
+    qty: modalQty
+  });
 }
 
-notify(`✅ ${finalName} (${modalQty}x)`,"success");
+notify(`✅ ${item.nama} (${modalQty}x)`,"success");
 
 modal.classList.remove("show");
 saveCart();
@@ -748,15 +772,27 @@ islandForceShow = false;
 }
 
 function add(n){
-let item=cart.find(i=>i.nama===n);
+
+let item = cart.find(i => i.nama === n);
+
 if(item){
-item.qty++;
-notify(`🔄 ${n} (${item.qty}x)`,"info");
+  item.qty++;
+  notify(`🔄 ${n} (${item.qty}x)`,"info");
 }else{
-let d=data.find(x=>x.nama===n);
-cart.push({...d,qty:1});
-notify(`✅ ${n} ditambahkan`,"success");
+  let d = data.find(x => x.nama === n);
+
+  cart.push({
+    nama: d.nama,
+    basePrice: d.harga,
+    size: null,
+    sizePrice: 0,
+    selectedToppings: [],
+    qty: 1
+  });
+
+  notify(`✅ ${n} ditambahkan`,"success");
 }
+
 saveCart();
 updateCart();
 }
@@ -1082,14 +1118,22 @@ paymentLock = true;
 setCheckoutLoading(true);
 
 /* HITUNG TOTAL */
-let subtotal=0;
-cart.forEach(i=>{
-subtotal+=i.harga*i.qty;
+let subtotal = 0;
+
+cart.forEach(i => {
+
+  let toppingTotal = (i.selectedToppings || [])
+    .reduce((sum,t)=>sum + t.harga, 0);
+
+  let itemPrice = i.basePrice + (i.sizePrice || 0) + toppingTotal;
+
+  subtotal += itemPrice * i.qty;
+
 });
 
 let service = subtotal * APP_CONFIG.SERVICE_PERCENT;
 let tax = subtotal * APP_CONFIG.TAX_PERCENT;
-let grand=subtotal+service+tax;
+let grand = subtotal + service + tax;
 
 let method=document.getElementById("paymentMethod").value;
 let name=document.querySelectorAll(".input")[0].value;
