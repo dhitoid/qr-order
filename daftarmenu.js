@@ -1,44 +1,102 @@
 /* ================= DHITO CAFE CENTRAL CONFIG ================= */
+const IMG_PATH = "img/menu/";
+
+function menuImg(file){
+  return IMG_PATH + file;
+}
 
 /* ===== MENU MASTER ===== */
 const MENU_DATA = [
+
+/* ===== MAKANAN ===== */
+
 {
 nama:"Nasi Goreng",
 harga:25000,
 kategori:"makanan",
-img:"https://source.unsplash.com/600x400/?friedrice",
-desc:"Nasi goreng spesial dengan ayam, telur, dan bumbu rahasia Dhito Cafe."
+img:menuImg("nasigoreng.jpg"),
+desc:"Nasi goreng spesial ayam dan telur.",
+toppings:[
+{nama:"Extra Keju",harga:5000},
+{nama:"Telur Tambah",harga:6000},
+{nama:"Sosis",harga:7000}
+]
 },
+
+{
+nama:"Ayam Geprek",
+harga:28000,
+kategori:"makanan",
+img:menuImg("ayamgeprek.jpg"),
+desc:"Ayam crispy dengan sambal khas.",
+toppings:[
+{nama:"Level Pedas +1",harga:0},
+{nama:"Extra Keju",harga:5000}
+]
+},
+
+/* ===== MINUMAN ===== */
+
 {
 nama:"Es Kopi",
 harga:18000,
 kategori:"minuman",
-img:"https://source.unsplash.com/600x400/?coffee",
-desc:"Cold brew creamy dengan gula aren premium, segar dan nikmat."
+img:menuImg("eskopi.jpg"),
+desc:"Cold brew creamy gula aren.",
+toppings:[
+{nama:"Extra Shot",harga:8000},
+{nama:"Oat Milk",harga:6000},
+{nama:"Whipped Cream",harga:4000}
+]
 },
+
+{
+nama:"Matcha Latte",
+harga:24000,
+kategori:"minuman",
+img:menuImg("matcha.jpg"),
+desc:"Matcha premium creamy.",
+toppings:[
+{nama:"Extra Matcha",harga:7000},
+{nama:"Soy Milk",harga:5000}
+]
+},
+
+/* ===== CEMILAN ===== */
+
 {
 nama:"Kentang",
 harga:15000,
 kategori:"cemilan",
-img:"https://source.unsplash.com/600x400/?fries",
-desc:"Kentang goreng crispy dengan saus spesial pilihan."
+img:menuImg("kentang.jpg"),
+desc:"Kentang crispy.",
+toppings:[
+{nama:"Saus Keju",harga:4000},
+{nama:"Saus BBQ",harga:4000},
+{nama:"Mayonaise",harga:3000}
+]
 },
+
+{
+nama:"Onion Ring",
+harga:17000,
+kategori:"cemilan",
+img:menuImg("onionring.jpg"),
+desc:"Onion ring crispy golden.",
+toppings:[]
+},
+
+/* ===== PROMO ===== */
+
 {
 nama:"Paket Hemat",
 harga:45000,
 kategori:"promo",
-img:"https://source.unsplash.com/600x400/?foodcombo",
-desc:"Combo nasi + minuman favorit dengan harga lebih hemat."
+img:menuImg("pakethemat.jpg"),
+desc:"Combo hemat nasi + minuman.",
+toppings:[] // tidak bisa tambah topping
 }
-];
 
-/* ===== TOPPING MASTER ===== */
-const TOPPINGS_DATA = [
-{nama:"Extra Keju",harga:5000},
-{nama:"Telur Tambah",harga:6000},
-{nama:"Sosis",harga:7000},
-{nama:"Extra Shot Kopi",harga:8000},
-{nama:"Whipped Cream",harga:4000}
 ];
 
 /* ===== GLOBAL SETTINGS ===== */
